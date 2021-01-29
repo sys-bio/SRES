@@ -90,12 +90,12 @@ int main() {
     ESParameter **param = makeESParameter();
     ESPopulation **population = makeESPopulation();
     ESStatistics **stats = makeESStatistics();
-    ESfcnTrsfm **trsfm = makeTransformFun(dim);
+    ESfcnTrsfm *trsfm = makeTransformFun(dim);
 
     ESInitial(
             seed,
             param,
-            *trsfm,
+            trsfm,
             simple_cost,
             es,
             constraint,
@@ -125,12 +125,10 @@ int main() {
         nbCostCalls++;
     }
 
-//    ESDeInitial(derefESParameter(param), derefESPopulation(population), derefESStatistics(stats));
+    ESDeInitial(param, population, stats);
+    freeTransformFun(trsfm, 2);
 
-//    freeData(EXP_DATA);
-//    freeESParameter(param);
-//    freeESStatistics(stats);
-//    freePopulation(population);
+    freeData(EXP_DATA);
 
 
 
