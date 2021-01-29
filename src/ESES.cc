@@ -41,14 +41,6 @@
 #include "ESES.h"
 #include <memory>
 
-void freePtr(void *ptr) {
-    if (ptr == nullptr)
-        return;
-    free(ptr);
-    ptr = nullptr;
-}
-
-typedef double(*ESfcnTrsfm)(double);
 
 double do_nothing_transform(double x) {
     return x;
@@ -67,31 +59,6 @@ void freeTransformFun(ESfcnTrsfm *fun, int numEstimatedParams) {
     fun = nullptr;
 }
 
-/**
- * 1 Invalid free + 2 leaks definitely lost, both of which
- * originate from :
- *  auto **trsfm = (ESfcnTrsfm **) malloc(sizeof(ESfcnTrsfm *) * numEstimatedParams);
- */
-void freeTransformFun2(ESfcnTrsfm **fun, int numEstimatedParams) {
-    free(fun);
-    fun = nullptr;
-}
-
-/**
- * 1 leak definitely lost, originating from this line:
- *  auto **trsfm = (ESfcnTrsfm **) malloc(sizeof(ESfcnTrsfm *) * numEstimatedParams);
- */
-void freeTransformFun3(ESfcnTrsfm **fun, int numEstimatedParams) {
-    free(fun);
-    fun = nullptr;
-}
-
-
-//void freeTransformFun(ESfcnTrsfm *fun) {
-//    free(fun);
-//}
-
-
 ESParameter **makeESParameter() {
     ESParameter **pp = (ESParameter **) malloc(sizeof(ESParameter *));
     if (pp == nullptr) {
@@ -101,11 +68,6 @@ ESParameter **makeESParameter() {
     return pp;
 }
 
-
-void freeESParameter(ESParameter **parameter) {
-    free(*parameter);
-//    free(parameter);
-}
 
 ESIndividual *makeIndividual() {
     auto *individual = (ESIndividual *) malloc(sizeof(ESIndividual));
@@ -132,11 +94,6 @@ ESStatistics **makeESStatistics() {
     return pp;
 }
 
-
-void freeESStatistics(ESStatistics **statistics) {
-    free(*statistics);
-    free(statistics);
-}
 
 
 /*********************************************************************
