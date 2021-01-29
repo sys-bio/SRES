@@ -45,29 +45,9 @@ public:
     SresTests() = default;
 };
 
-TEST_F(SresTests, CheckThatESParameterCanBeCreatedAndDestroyedWithoutLeaks){
-    // run this with valgrind / sanitizers
-    ESParameter **  param = makeESParameter();
-    freeESParameter(param);
-}
-
-
-TEST_F(SresTests, CheckThatEStatisticsCanBeCreatedAndDestroyedWithoutLeaks){
-    // run this with valgrind / sanitizers
-    ESStatistics **  stat = makeESStatistics();
-    freeESStatistics(stat);
-}
-
-
-TEST_F(SresTests, CheckThatESPopulationCanBeCreatedAndDestroyedWithoutLeaks){
-    // run this with valgrind / sanitizers
-    ESPopulation **  pop = makeESPopulation();
-    freeESPopulation(pop);
-}
 
 TEST_F(SresTests, CheckDoNothingTransform){
-    ESfcnTrsfm** trsfm = makeTransformFun(2);
-
+    ESfcnTrsfm* trsfm = makeTransformFun(2);
     freeTransformFun(trsfm, 2);
 }
 
@@ -91,12 +71,12 @@ TEST_F(SresTests, CheckESInitialNoLeak){
     ESParameter **param = makeESParameter();
     ESPopulation **population = makeESPopulation();
     ESStatistics **stats = makeESStatistics();
-    ESfcnTrsfm **trsfm = makeTransformFun(dim);
+    ESfcnTrsfm *trsfm = makeTransformFun(dim);
 
     ESInitial(
             seed,
             param,
-            *trsfm,
+            trsfm,
             simple_cost,
             es,
             constraint,
@@ -138,12 +118,13 @@ TEST_F(SresTests, CheckESInitialWithStepNoLeaks){
     ESParameter **param = makeESParameter();
     ESPopulation **population = makeESPopulation();
     ESStatistics **stats = makeESStatistics();
-    ESfcnTrsfm **trsfm = makeTransformFun(dim);
+    ESfcnTrsfm *trsfm = makeTransformFun(dim);
+//    ESfcnTrsfm * trsfm = (ESfcnTrsfm*) malloc(sizeof(ESfcnTrsfm)*dim);
 
     ESInitial(
             seed,
             param,
-            *trsfm,
+            trsfm,
             simple_cost,
             es,
             constraint,

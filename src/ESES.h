@@ -76,9 +76,9 @@ typedef double(*ESfcnTrsfm)(double);
  */
 double do_nothing_transform(double x);
 
-ESfcnTrsfm **makeTransformFun(int numEstimatedParams);
+ESfcnTrsfm *makeTransformFun(int numEstimatedParams);
 
-void freeTransformFun(ESfcnTrsfm **fun, int numEstimatedParams);
+void freeTransformFun(ESfcnTrsfm *fun, int numEstimatedParams);
 
 /*********************************************************************
  ** ESParameter: struct for ES-parameter                            **

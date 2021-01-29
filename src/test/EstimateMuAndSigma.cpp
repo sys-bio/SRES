@@ -32,7 +32,7 @@ void freeData(double *data) {
     free(data);
 }
 
-double *EXP_DATA = generateData(10, 0.1);
+double *EXP_DATA = generateData(5, 0.1);
 
 void simple_cost(double *input_params, double *output_fitness, double *constraints) {
     double *data = generateData(input_params[0], input_params[1]);
@@ -112,7 +112,7 @@ int main() {
         nbCostCalls ++;
     }
 
-//	ESDeInitial(param, population, stats);
+	ESDeInitial(&param, &population, &stats);
 //
 //    freeData(EXP_DATA);
 
