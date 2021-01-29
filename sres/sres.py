@@ -1,31 +1,40 @@
-from sres_capi import _SresCApi
+from .sres_capi import _SRESLoader
 from abc import ABC, abstractmethod
 from typing import List
 import ctypes as ct
 
 
-class SRES(ABC):
-    _sres = _SresCApi()
+class SRES:
+    _sres = _SRESLoader()
+
+    # decorator for wrapping cost function written in Python
+    COST_FUNCTION_CALLBACK = ct.CFUNCTYPE(None, ct.POINTER(ct.c_double * 2), ct.POINTER(ct.c_double),
+                                          ct.POINTER(ct.c_double))
 
     # note when seed is 0, it'll be randomized. Special case.
-    def __init__(self, ngen: int, ub: List[float], lb: List[float],
+    def __init__(self, cost_function: COST_FUNCTION_CALLBACK, ngen: int, ub: List[float], lb: List[float],
                  parent_popsize: int = 50, child_popsize: int = 200, es: int = 1,
-                 gamma: float = 0.85, alpha: float = 0.2,
+                 gamma: float = 0.85, alpha: float = 0.2, pf: float = 0.45,
                  varphi: float = 1.0, retry: int = 1, seed: int = 0):
+        self.cost_function = cost_function
         self.dim = ct.c_int32(len(ub))
         self.seed = ct.c_int32(seed)
         self.es = ct.c_int32(es)
-        self.ub = ct.POINTER(ct.c_double*self.dim)(*ub)
-        self.lb = ct.POINTER(ct.c_double*self.dim)(*lb)
+        BoundaryArray = (ct.c_double * self.dim.value)
+        self.ub = ct.pointer(BoundaryArray(*ub))
+        self.lb = ct.pointer(BoundaryArray(*lb))
         self.miu = parent_popsize
         self.constraint = ct.c_int32(0)
         self.lambda_ = ct.c_int32(child_popsize)
         self.ngen = ct.c_int32(ngen)
         self.gamma = ct.c_double(gamma)
         self.alpha = ct.c_double(alpha)
+        self.pf = pf
         self.varphi = ct.c_double(varphi)
         self.retry = ct.c_int32(retry)
-        self._trsfm = self._getTransformFun(self.dim)
+
+        # Does nothing for now: just a plpaceholder
+        self._trsfm = self._makeTransformFun(self.dim)
 
         # ptr to ESParameter**
         self._param_ptr = self._makeESParameter()
@@ -36,22 +45,12 @@ class SRES(ABC):
         # ptr to ESStatistics**
         self._stat_ptr = self._makeESStatistics()
 
-    # decorator for wrapping cost function written in Python
-    COST_FUNCTION_CALLBACK = ct.CFUNCTYPE(None, ct.POINTER(ct.c_double * 2), ct.POINTER(ct.c_double),
-                                          ct.POINTER(ct.c_double))
-
-    @staticmethod
-    @COST_FUNCTION_CALLBACK
-    def cost_fun(x, f, g):
-        raise NotImplementedError("You need to implement a cost function")
-
-    def fit(self, f):
-        ESInitial = self._loadESInitial()
-        ESInitial(
+        # load the ESInitial function then call it with input parameters
+        self._loadESInitial()(
             self.seed,
             self._param_ptr,
             self._trsfm,
-            f,
+            self.cost_function,
             self.es,
             self.constraint,
             self.dim,
@@ -68,6 +67,18 @@ class SRES(ABC):
             self._stat_ptr
         )
 
+    @staticmethod
+    @COST_FUNCTION_CALLBACK
+    def cost_function(x, f, g):
+        raise NotImplementedError("You need to implement a cost function")
+
+    def fit(self):
+        for i in range(self.ngen.value):
+            self.step(self.pf)
+
+    def step(self, pf: float) -> None:
+        self._ESStep(self._pop_ptr, self._param_ptr, self._stat_ptr, self.pf)
+
     def _makeDoubleArrayPtr(self, input: List[float]):
         """returns a ctypes double array from input"""
         ctypes_double_type = ct.c_double * len(input)
@@ -81,18 +92,19 @@ class SRES(ABC):
         return_type=ct.c_uint64  # return type: ESParameter**
     )
 
-    _freeESParameter = _sres._load_func(
-        funcname="freeESParameter",
-        argtypes=[ct.c_uint64],  # void
-        return_type=None  # return type: ESParameter**
-    )
-
     # trsfm can be a decorator too. For now its just ignored
-    # ESfcnTrsfm * getTransformFun()
-    _getTransformFun = _sres._load_func(
-        funcname="getTransformFun",
+    # ESfcnTrsfm * makeTransformFun()
+    _makeTransformFun = _sres._load_func(
+        funcname="makeTransformFun",
         argtypes=[ct.c_int32],
         return_type=ct.c_uint64
+    )
+
+    # void freeTransformFun(ESfcnTrsfm *fun)
+    _freeTransformFun = _sres._load_func(
+        funcname="freeTransformFun",
+        argtypes=[ct.c_int32],
+        return_type=None,
     )
 
     """
@@ -135,8 +147,6 @@ class SRES(ABC):
     #                ESfcnFG*, int, int, int, double *, double *, int, int, int, \
     #                double, double, double, int, \
     #                ESPopulation **, ESStatistics **);
-
-    # Loading this method will have to be done in the constructor
 
     def _loadESInitial(self):
         """
@@ -181,37 +191,11 @@ class SRES(ABC):
         return_type=ct.c_uint64  # ESPopulation *
     )
 
-    """/**
-     * @brief free a ESPopulation* allocated by ESPopulation
-     */
-    """
-    # void freePopulation(ESPopulation* population);
-    _freeESPopulation = _sres._load_func(
-        funcname="freePopulation",
-        argtypes=[
-            ct.c_uint64,  # ESPopulation *
-        ],
-        return_type=None
-    )
-
     # ESStatistics *makeESStatistics();
     _makeESStatistics = _sres._load_func(
         funcname="makeESStatistics",
         argtypes=[],
         return_type=ct.c_uint64  # ESPopulation *
-    )
-
-    """/**
-     * @brief free a ESPopulation* allocated by ESPopulation
-     */
-    """
-    # void freeESStatistics(ESStatistics* statistics);
-    _freeESStatistics = _sres._load_func(
-        funcname="freeESStatistics",
-        argtypes=[
-            ct.c_uint64,  # ESStatistics*
-        ],
-        return_type=None
     )
 
     # void ESDeInitial(ESParameter *, ESPopulation *, ESStatistics *);
@@ -225,39 +209,6 @@ class SRES(ABC):
         return_type=None
     )
 
-    # void ESPrintIndividual(ESIndividual *, ESParameter *);
-    _ESPrintIndividual = _sres._load_func(
-        funcname="ESPrintIndividual",
-        argtypes=[
-            ct.c_uint64,  # ESIndividual *,
-            ct.c_uint64,  # ESParameter *
-        ],
-        return_type=None)
-    # void ESPrintOp(ESIndividual *, ESParameter *);
-    _ESPrintOp = _sres._load_func(
-        funcname="ESPrintOp",
-        argtypes=[
-            ct.c_uint64,  # ESIndividual *,
-            ct.c_uint64,  # ESParameter *
-        ],
-        return_type=None)
-    # void ESPrintSp(ESIndividual *, ESParameter *);
-    _ESPrintSp = _sres._load_func(
-        funcname="ESPrintSp",
-        argtypes=[
-            ct.c_uint64,  # ESIndividual *,
-            ct.c_uint64,  # ESParameter *
-        ],
-        return_type=None)
-
-    # void ESPrintStat(ESStatistics *, ESParameter *);
-    _ESPrintStat = _sres._load_func(
-        funcname="ESPrintStat",
-        argtypes=[
-            ct.c_uint64,  # ESStatistics *,
-            ct.c_uint64,  # ESParameter *
-        ],
-        return_type=None)
     """
     /*********************************************************************
      ** stepwise evolution                                              **
@@ -278,3 +229,4 @@ class SRES(ABC):
             ct.c_double,  # double
         ],
         return_type=None)
+

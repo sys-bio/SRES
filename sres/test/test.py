@@ -1,8 +1,5 @@
 import unittest
 
-from ..sres import SRES
-import ctypes as ct
-
 from sres import SRES
 import numpy as np
 import ctypes as ct
@@ -62,7 +59,6 @@ class Test(unittest.TestCase):
         esparam = self.sres._makeESParameter()
         stats = self.sres._makeESStatistics()
         pop = self.sres._makeESPopulation()
-        costFun = self.sres.getCostFunPtr()
         trsf = self.sres._getTransformFun()
 
         # https://stackoverflow.com/questions/51131433/how-to-pass-lists-into-a-ctypes-function-on-python/51132594

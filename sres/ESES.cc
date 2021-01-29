@@ -54,7 +54,7 @@ ESfcnTrsfm *makeTransformFun(int numEstimatedParams) {
     return trsfm;
 }
 
-void freeTransformFun(ESfcnTrsfm *fun, int numEstimatedParams) {
+void freeTransformFun(ESfcnTrsfm *fun) {
     free(fun);
     fun = nullptr;
 }
@@ -144,8 +144,8 @@ void ESInitial(unsigned int seed, ESParameter **param, ESfcnTrsfm *trsfm, \
     ESInitialPopulation(population, (*param));
     ESInitialStat(stats, (*population), (*param));
 
-    printf("\n========\nseed = %u\n========\n", outseed);
-    fflush(nullptr);
+//    printf("\n========\nseed = %u\n========\n", outseed);
+//    fflush(nullptr);
 
     return;
 }
@@ -390,14 +390,14 @@ void ESPrintOp(ESIndividual *indvdl, ESParameter *param) {
 
     if (trsfm == nullptr) {
         for (i = 0; i < dim; i++) {
-//            printf("\t%f", indvdl->op[i]);
+            printf("\t%f", indvdl->op[i]);
         }
     } else {
         for (i = 0; i < dim; i++) {
             if (trsfm[i] == nullptr) {
-//                printf("\t%f", indvdl->op[i]);
+                printf("\t%f", indvdl->op[i]);
             } else {
-//                printf("\t%f", (trsfm[i])(indvdl->op[i]));
+                printf("\t%f", (trsfm[i])(indvdl->op[i]));
             }
         }
     }
@@ -421,7 +421,7 @@ void ESPrintSp(ESIndividual *indvdl, ESParameter *param) {
                 printf("\t%f", indvdl->sp[i]);
             else {
                 indvdl->sp[i];
-//                printf("\t%f", (trsfm[i])(indvdl->sp[i]));
+                printf("\t%f", (trsfm[i])(indvdl->sp[i]));
             }
     }
 
