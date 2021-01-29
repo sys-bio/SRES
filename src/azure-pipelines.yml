@@ -1,0 +1,112 @@
+stages:
+  - stage: Build
+    displayName: Build
+    jobs:
+      - job: BuildLinux
+        timeoutInMinutes: "0"
+        pool:
+          vmImage: 'ubuntu-18.04'
+        variables:
+          BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
+          SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
+          INSTALL_DIR: '$(System.DefaultWorkingDirectory)/install-azure'
+        steps:
+          - checkout: self
+            submodules: recursive
+
+          - bash: echo "##vso[task.prependpath]$CONDA/bin"
+            displayName: Add conda to PATH
+
+          - script: |
+              mkdir -p $(BUILD_DIR)
+              cd $(BUILD_DIR)
+              cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
+              cmake --build $(BUILD_DIR) --target install --config Release -j 12
+
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: '$(INSTALL_DIR)'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: Moonfit-linux
+              Parallel: true
+              ParallelCount: 8
+
+      - job: BuildMac
+        timeoutInMinutes: "0"
+        pool:
+          vmImage: 'macOS-10.15'
+        variables:
+          BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
+          SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
+          INSTALL_DIR: '$(System.DefaultWorkingDirectory)/install-azure'
+        steps:
+          - checkout: self
+            submodules: recursive
+
+          - bash: echo "##vso[task.prependpath]$CONDA/bin"
+            displayName: Add conda to PATH
+
+          # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+          # We need to take ownership if we want to update conda or install packages globally
+          - bash: sudo chown -R $USER $CONDA
+            displayName: Take ownership of conda installation
+
+          - script: |
+              mkdir -p $(BUILD_DIR)
+              cd $(BUILD_DIR)
+              cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
+              cmake --build $(BUILD_DIR) --target install --config Release -j 12
+
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: '$(INSTALL_DIR)'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: Moonfit-mac
+              Parallel: true
+              ParallelCount: 8
+
+      - job: BuildWindows
+        timeoutInMinutes: "0"
+        pool:
+          vmImage: 'windows-2019'
+        variables:
+          BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
+          SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
+          INSTALL_DIR: '$(System.DefaultWorkingDirectory)/install-azure'
+        steps:
+          - checkout: self
+            submodules: recursive
+
+          - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+            displayName: Add conda to PATH
+
+          - powershell: |
+              New-Item -ItemType Directory -Force -Path $(BUILD_DIR)
+              cd $(BUILD_DIR)
+              cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
+              cmake --build $(BUILD_DIR) --target install --config Release -j 12
+
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: '$(INSTALL_DIR)'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: Moonfit-windows
+              Parallel: true
+              ParallelCount: 8
+
+
+
+
+

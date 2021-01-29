@@ -1,0 +1,42 @@
+# this configuration file is copied into build tree by cmake.
+# you should install the package then you can run setup.py from there
+
+
+from setuptools import setup
+import os, glob
+
+
+def find_sres_dll():
+    dlls = glob.glob(
+        os.path.join(os.path.dirname(__file__), "**/*SRES*.dll")
+    )
+    if len(dlls) == 0:
+        raise ValueError("SRES library not found")
+    elif len(dlls) > 1:
+        raise ValueError(f"Too may SRES libraries found: {dlls}")
+    print(f"SRES library found ar {dlls[0]}")
+    return dlls[0]
+
+
+
+setup(
+    name='pysres',
+    version='0.0.0',
+    license='MIT',
+    long_description=open('D:/Moonfit/Readme.md').read(),
+    long_description_content_type="text/markdown",
+    author='Ciaran Welsh',
+    author_email='cw00137@gmail.com',
+    url='https://github.com/sys-bio/Moonfit',
+    keywords=['parameter estimation'],
+    install_requires=open("requirements.txt").read().split("\n"),
+    packages=['pysres'],
+    package_dir={'pysres': 'site-packages/pysres'},
+    package_data={'pysres': [
+        find_sres_dll(),
+    ]}, # + binaries},
+    include_package_data=True,
+    platforms=["Windows", "Linux", "Unix", "Mac OS-X"],
+    has_ext_modules=lambda: True,
+
+)
