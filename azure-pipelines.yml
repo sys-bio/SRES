@@ -31,7 +31,7 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: Moonfit-linux
+              artifactName: SRES-linux
               Parallel: true
               ParallelCount: 8
 
@@ -69,7 +69,7 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: Moonfit-mac
+              artifactName: SRES-mac
               Parallel: true
               ParallelCount: 8
 
@@ -102,7 +102,7 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: Moonfit-windows
+              artifactName: SRES-windows
               Parallel: true
               ParallelCount: 8
 
