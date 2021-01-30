@@ -5,7 +5,7 @@ import sys
 from typing import List
 
 
-class _SresCApi:
+class _SRESLoader:
 
     def __init__(self):
         self._lib = self._load_lib()

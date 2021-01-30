@@ -104,25 +104,13 @@ endif ()
 
 add_subdirectory(external)
 
-add_subdirectory(src)
-#
-#add_subdirectory(Linux2Windows)
-#
-#add_subdirectory(Moonfit)
-#
-#add_subdirectory(Elfaki2020)
+add_subdirectory(sres)
 
-
-############################################################################
-#       tests
-#
-#add_subdirectory(googletest)
-#add_subdirectory(test)
 
 option(COPY_BINARY_TO_PYTHON_DIR " when true, find the SRES binary and copy to sres python folder" off)
 
 if (COPY_BINARY_TO_PYTHON_DIR)
-    install(TARGETS SRES DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/Moonfit/Extreminator/optimizers/SRES/python)
+    install(TARGETS SRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
 endif ()
 
 

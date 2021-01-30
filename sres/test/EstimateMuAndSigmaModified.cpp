@@ -1,13 +1,18 @@
-//
-// Created by Ciaran on 29/01/2021.
-//
-
-#include "gtest/gtest.h"
 #include "ESES.h"
 #include <cmath>
-//#include "random"
+#include "random"
 
 #define PI 3.14159265359
+#define Popsize 5
+#define Generation 500
+#define Gamma 0.85
+#define Alpha 0.2
+#define Varphi 1
+#define Retry 10
+#define ESPlus 0
+#define ESSlash 1
+#define Pf 0.45
+
 
 double normal(double x, double mu, double sigma) {
     double first_bit = 1 / (sigma * sqrt(2 * PI));
@@ -39,67 +44,34 @@ void simple_cost(double *input_params, double *output_fitness, double *constrain
     *output_fitness = cost;
 }
 
-class SresTests : public ::testing::Test{
 
-public:
-    SresTests() = default;
-};
+double doNothingTransform(double x) {
+    return x;
+}
 
+double log2Transform(double x) {
+    return log2(x);
+}
 
-TEST_F(SresTests, CheckDoNothingTransform){
-    ESfcnTrsfm* trsfm = makeTransformFun(2);
-    freeTransformFun(trsfm, 2);
+double log10Transform(double x) {
+    return log10(x);
 }
 
 
-TEST_F(SresTests, CheckESInitialNoLeak){
-
-    unsigned int seed = 1;
-    int es = 1;
-    int constraint = 0;
-    int dim = 6;
-    double gamma = 0.85;
-    double alpha = 0.2;
-    int varphi = 1;
-    int retry = 10;
-    double pf = 0.45;
-    int parent_pop = 30; // miu
-    int child_pop = 30; // lambda
-    int ngen = 50;
-    double ub[2] = {10.0, 10.0};
-    double lb[2] = {0.1, 0.1};
-    ESParameter **param = makeESParameter();
-    ESPopulation **population = makeESPopulation();
-    ESStatistics **stats = makeESStatistics();
-    ESfcnTrsfm *trsfm = makeTransformFun(dim);
-
-    ESInitial(
-            seed,
-            param,
-            trsfm,
-            simple_cost,
-            es,
-            constraint,
-            dim,
-            ub,
-            lb,
-            parent_pop,
-            child_pop,
-            ngen,
-            gamma,
-            alpha,
-            varphi,
-            retry,
-            population,
-            stats
-    );
-
-    ESDeInitial(param, population, stats);
-    freeTransformFun(trsfm, 2);
-
+void func_to_pass_in(double *x, double* y) {
+    printf("hello from func_to_pass_in\n");
+    printf("x is %f\n", *x);
+    printf("y is %f\n", *y);
+    *y = 2* (*x);
 }
 
-TEST_F(SresTests, CheckESInitialWithStepNoLeaks){
+int main() {
+
+//    double input = 4.0;
+//    double output = 0.0;
+//    function_that_takes_a_function(func_to_pass_in, &input, &output);
+//    printf("Output is still : %f\n", output);
+
 
     unsigned int seed = 1;
     int es = 1;
@@ -119,7 +91,6 @@ TEST_F(SresTests, CheckESInitialWithStepNoLeaks){
     ESPopulation **population = makeESPopulation();
     ESStatistics **stats = makeESStatistics();
     ESfcnTrsfm *trsfm = makeTransformFun(dim);
-//    ESfcnTrsfm * trsfm = (ESfcnTrsfm*) malloc(sizeof(ESfcnTrsfm)*dim);
 
     ESInitial(
             seed,
@@ -141,37 +112,24 @@ TEST_F(SresTests, CheckESInitialWithStepNoLeaks){
             population,
             stats
     );
-    int stepCount = 0;
-    while (true){
-        ESStep(population, param, stats, pf);
-        stepCount++;
-        if (stepCount == ngen){
-            break;
-        }
+    unsigned int nbCostCalls = 0;
+
+    while ((*stats)->curgen < (*param)->gen) {
+        //(CW) multithreading opportunity
+        ESStep(
+                population,
+                param,
+                stats,
+                pf
+        );
+        nbCostCalls++;
     }
 
     ESDeInitial(param, population, stats);
-    freeTransformFun(trsfm, 2);
+    freeTransformFun(trsfm);
+
+    freeData(EXP_DATA);
+
+
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
