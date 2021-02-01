@@ -348,16 +348,16 @@ stages:
           py39:
             PythonVersion: cp39-cp39
       variables:
-          PythonRoot: '/opt/python'
+          PythonRoot: '/opt/python/'
           PythonLibDir: '$(PythonRoot)/lib'
           PythonBinDir: '$(PythonRoot)/bin'
           PythonExecutable: '$(PythonBinDir)/python'
           PipExecutable: '$(PythonBinDir)/pip'
       steps:
-        - bash: echo "##vso[task.prependpath]$CONDA/bin"
-          displayName: Add conda to PATH
         - download: current
           artifact: SRES-ManyLinux
+        - script: |
+            echo
         - script: |
             cd $(Pipeline.Workspace)/SRES-ManyLinux
             $(PythonExecutable) setup.py bdist_wheel
