@@ -348,7 +348,7 @@ stages:
           py39:
             PythonVersion: cp39-cp39
       variables:
-          PythonRoot: '/opt/python/'
+          PythonRoot: '/opt/python'
           PythonLibDir: '$(PythonRoot)/lib'
           PythonBinDir: '$(PythonRoot)/bin'
           PythonExecutable: '$(PythonBinDir)/python'
@@ -357,7 +357,16 @@ stages:
         - download: current
           artifact: SRES-ManyLinux
         - script: |
-            echo
+            echo "> ls"
+            ls
+            echo "> cd /"
+            cd /
+            echo "> ls"
+            ls
+            echo "> cd opt"
+            cd opt
+            echo "> cd python"
+            cd python
         - script: |
             cd $(Pipeline.Workspace)/SRES-ManyLinux
             $(PythonExecutable) setup.py bdist_wheel
