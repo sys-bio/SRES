@@ -145,7 +145,6 @@ stages:
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
-            cd $(INSTALL_DIR)
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install $(realpath $(ls dist))
             $(PythonExecutable) -c "import sres"
@@ -191,7 +190,6 @@ stages:
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
-            cd $(INSTALL_DIR)
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install $(realpath $(ls dist))
             $(PythonExecutable) -c "import sres"
@@ -237,7 +235,6 @@ stages:
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
-            cd $(INSTALL_DIR)
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install $(realpath $(ls dist))
             $(PythonExecutable) -c "import sres"
