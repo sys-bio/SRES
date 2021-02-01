@@ -348,7 +348,7 @@ stages:
           py39:
             PythonVersion: cp39-cp39
       variables:
-          PythonRoot: '/opt/python'
+          PythonRoot: '/opt/python/$(PythonVersion)'
           PythonLibDir: '$(PythonRoot)/lib'
           PythonBinDir: '$(PythonRoot)/bin'
           PythonExecutable: '$(PythonBinDir)/python'
