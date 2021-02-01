@@ -1,5 +1,6 @@
 stages:
   - stage: BuildUbuntu
+    dependsOn: []
     displayName: Build Ubuntu 18.04
     jobs:
       - job: BuildUbuntuJob
@@ -33,6 +34,7 @@ stages:
               ParallelCount: 8
 
   - stage: BuildMac
+    dependsOn: []
     displayName: Build MacOS
     jobs:
       - job: BuildMacJob
@@ -71,6 +73,7 @@ stages:
 
   - stage: BuildWindows
     displayName: Build Windows
+    dependsOn: []
     jobs:
       - job: BuildWindows
         timeoutInMinutes: "0"
