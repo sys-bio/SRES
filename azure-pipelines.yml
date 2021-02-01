@@ -187,11 +187,18 @@ stages:
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
+            echo "> Build.ArtifactStagingDirectory: "
+            echo "$(Build.ArtifactStagingDirectory)
+            echo "> Pipeline.Workspace: "
+            echo "$(Pipeline.Workspace)
             echo "> pwd: "
             pwd
             echo "> ls: "
             ls
-            cd $(Pipeline.Workspace)/SRES-Mac
+            echo "> which conda"
+            which conda
+            echo "> cd $(Pipeline.Workspace)/SRES-MacOS"
+            cd $(Pipeline.Workspace)/SRES-MacOS
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
