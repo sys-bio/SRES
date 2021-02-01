@@ -61,12 +61,6 @@ file(RELATIVE_PATH INSTALL_RPATH_DIRECTORIES
 # make all shared libraries have the same directory, the bin and the lib dirs in RPATH
 set(CMAKE_INSTALL_RPATH ${base} ${base}/${INSTALL_RPATH_DIRECTORIES})
 
-# set default visibility to hidden on all platforms (GCC and Clang default is to show
-# while visual studio, the default is hidden)
-#set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-#set(CMAKE_C_VISIBILITY_PRESET hidden)
-#set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-
 
 # Wierd bug on windows:
 # the __cplusplus macro always defaults to 199711L regardless of which version of
