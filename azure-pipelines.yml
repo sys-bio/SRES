@@ -245,6 +245,14 @@ stages:
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - powershell: |
+            echo "> pwd"
+            pwd
+            echo "> ls"
+            ls
+            echo "cd C:"
+            cd C:
+            echo "> ls"
+            ls
             cd $(Pipeline.Workspace)/SRES-Windows
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
