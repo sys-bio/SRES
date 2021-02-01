@@ -126,10 +126,11 @@ stages:
           PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
           PythonLibDir: '$(PythonRoot)/lib'
           PythonExecutable: '$(PythonRoot)/bin/python'
+          CondaExecutable: '$(MinicondaRoot)/bin/conda'
+          PipExecutable: '$(PythonRoot)/bin/pip'
       steps:
         - bash: echo "##vso[task.prependpath]$CONDA/bin"
           displayName: Add conda to PATH
-
         - download: current
           artifact: SRES-Ubuntu
         # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
@@ -216,6 +217,8 @@ stages:
           PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
           PythonLibDir: '$(PythonRoot)/lib'
           PythonExecutable: '$(PythonRoot)/bin/python'
+          CondaExecutable: '$(PythonRoot)/Scripts/conda.exe'
+          PipExecutable: '$(PythonRoot)/Scripts/pip.exe'
       steps:
         - bash: echo "##vso[task.prependpath]$CONDA/bin"
           displayName: Add conda to PATH
