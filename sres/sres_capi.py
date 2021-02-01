@@ -31,16 +31,20 @@ class _SRESLoader:
         this_directory = os.path.join(os.path.dirname(__file__))
         one_directory_up = os.path.dirname(this_directory)
 
-        dlls = glob.glob(os.path.join(
+        shared_lib = glob.glob(os.path.join(
             one_directory_up,
             f"**/{self._get_shared_library_prefix()}SRES{self._get_shared_library_extension()}")
         )
 
-        if len(dlls) == 0:
+        print("> Shared_lib: \n", shared_lib)
+        print("> this dir: \n", os.getcwd())
+        print("> ls from python: \n", os.listdir(os.getcwd()))
+
+        if len(shared_lib) == 0:
             raise ValueError("SRES library not found")
-        elif len(dlls) > 1:
-            raise ValueError(f"Too may SRES libraries found: {dlls}")
-        return dlls[0]
+        elif len(shared_lib) > 1:
+            raise ValueError(f"Too may SRES libraries found: {shared_lib}")
+        return shared_lib[0]
 
     def _load_lib(self):
         """Load the SRES C API binary"""
