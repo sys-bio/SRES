@@ -235,7 +235,7 @@ stages:
           CondaExecutable: '$(MinicondaRoot)\\Scripts\\conda.exe'
           PipExecutable: '$(PythonScriptsDir)\\pip.exe'
       steps:
-        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+        - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
 
         - download: current
@@ -244,7 +244,7 @@ stages:
         # We need to take ownership if we want to update conda or install packages globally
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
-        - script: |
+        - powershell: |
             echo "> pwd"
             pwd
             echo "> dir"
