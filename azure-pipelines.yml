@@ -174,7 +174,7 @@ stages:
             PythonVersion: 3.9
             PythonName: py39
       variables:
-        MinicondaRoot : '/usr/share/miniconda/'
+        MinicondaRoot : '/usr/local/miniconda'
         PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
         PythonLibDir: '$(PythonRoot)/lib'
         PythonExecutable: '$(PythonRoot)/bin/python'
@@ -254,10 +254,6 @@ stages:
           displayName: PrintPythonVariables
         - download: current
           artifact: SRES-Windows
-        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-        # We need to take ownership if we want to update conda or install packages globally
-        - bash: sudo chown -R $USER $CONDA
-          displayName: Take ownership of conda installation
         - powershell: |
             echo "> pwd"
             pwd
