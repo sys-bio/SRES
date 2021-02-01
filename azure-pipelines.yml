@@ -150,7 +150,17 @@ stages:
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
-
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-Ubuntu'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-Ubuntu
+            Parallel: true
+            ParallelCount: 8
 
   - stage: MacPipWheel
     dependsOn: BuildMac
@@ -183,7 +193,6 @@ stages:
       steps:
         - bash: echo "##vso[task.prependpath]$CONDA/bin"
           displayName: Add conda to PATH
-
         - download: current
           artifact: SRES-MacOS
         # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
@@ -209,7 +218,17 @@ stages:
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
-
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-MacOS'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-MacOS
+            Parallel: true
+            ParallelCount: 8
 
   - stage: WindowsPipWheel
     dependsOn: BuildWindows
@@ -268,6 +287,16 @@ stages:
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)\dist\$(ls dist)"
             $(PythonExecutable) -c "import sres"
-
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-Windows'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-Windows
+            Parallel: true
+            ParallelCount: 8
 
 
