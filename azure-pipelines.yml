@@ -109,49 +109,48 @@ stages:
 
   - stage: PipWheels
     displayName: Build Pip Wheels
-    dependsOn: [BuildMac]
-      - jobs:
-        - job:
-        strategy:
-          matrix:
-            py36:
-              PythonVersion: 3.6
-              PythonName: py36
-            py37:
-              PythonVersion: 3.7
-              PythonName: py37
-            py38:
-              PythonVersion: 3.8
-              PythonName: py38
-            py39:
-              PythonVersion: 3.9
-              PythonName: py39
-        variables:
-          MinicondaRoot : '/usr/local/miniconda'
-          PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
-          PythonLibDir: '$(PythonRoot)/lib'
-          PythonExecutable: '$(PythonRoot)/bin/python'
-          CondaExecutable: '$(MinicondaRoot)/condabin/conda'
-          PipExecutable: '$(PythonRoot)/bin/pip'
-        steps:
-          - bash: echo "##vso[task.prependpath]$CONDA/bin"
-            displayName: Add conda to PATH
+    jobs:
+    - job:
+      strategy:
+        matrix:
+          py36:
+            PythonVersion: 3.6
+            PythonName: py36
+          py37:
+            PythonVersion: 3.7
+            PythonName: py37
+          py38:
+            PythonVersion: 3.8
+            PythonName: py38
+          py39:
+            PythonVersion: 3.9
+            PythonName: py39
+      variables:
+        MinicondaRoot : '/usr/local/miniconda'
+        PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
+        PythonLibDir: '$(PythonRoot)/lib'
+        PythonExecutable: '$(PythonRoot)/bin/python'
+        CondaExecutable: '$(MinicondaRoot)/condabin/conda'
+        PipExecutable: '$(PythonRoot)/bin/pip'
+      steps:
+        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+          displayName: Add conda to PATH
 
-          - download: current
-            artifact: SRES-mac
-          # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-          # We need to take ownership if we want to update conda or install packages globally
-          - bash: sudo chown -R $USER $CONDA
-            displayName: Take ownership of conda installation
-          - script: |
-              cd $(Pipeline.Workspace)/SRES-mac
-              $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
-              # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
-              # export LD_LIBRARY_PATH=$(PythonLibDir)
-              cd $(INSTALL_DIR)
-              $(PythonExecutable) setup.py bdist_wheel
-              $(PipExecutable) install $(realpath $(ls dist))
-              $(PythonExecutable) -c "import sres"
+        - download: current
+          artifact: SRES-mac
+        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+        # We need to take ownership if we want to update conda or install packages globally
+        - bash: sudo chown -R $USER $CONDA
+          displayName: Take ownership of conda installation
+        - script: |
+            cd $(Pipeline.Workspace)/SRES-mac
+            $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
+            # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+            # export LD_LIBRARY_PATH=$(PythonLibDir)
+            cd $(INSTALL_DIR)
+            $(PythonExecutable) setup.py bdist_wheel
+            $(PipExecutable) install $(realpath $(ls dist))
+            $(PythonExecutable) -c "import sres"
 
 #          - task: CopyFiles@2
 #            inputs:
