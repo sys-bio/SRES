@@ -149,6 +149,7 @@ stages:
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
 
+
   - stage: MacPipWheel
     dependsOn: BuildMac
     displayName: Build Pip Wheels for Mac
@@ -186,6 +187,10 @@ stages:
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
+            echo "> pwd: "
+            pwd
+            echo "> ls: "
+            ls
             cd $(Pipeline.Workspace)/SRES-Mac
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
@@ -193,6 +198,7 @@ stages:
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install $(realpath $(ls dist))
             $(PythonExecutable) -c "import sres"
+
 
   - stage: WindowsPipWheel
     dependsOn: BuildWindows
