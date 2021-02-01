@@ -1,6 +1,6 @@
-import os
-import glob
 import ctypes as ct
+import glob
+import os
 import sys
 from typing import List
 
@@ -26,9 +26,26 @@ class _SRESLoader:
         elif sys.platform == "darwin":
             return "lib"
 
+    def _find_sres(self):
+        """Find the SRES shared library"""
+        this_directory = os.path.join(os.path.dirname(__file__))
+        one_directory_up = os.path.dirname(this_directory)
+
+        dlls = glob.glob(os.path.join(
+            one_directory_up,
+            f"**/{self._get_shared_library_prefix()}SRES{self._get_shared_library_extension()}")
+        )
+
+        if len(dlls) == 0:
+            raise ValueError("SRES library not found")
+        elif len(dlls) > 1:
+            raise ValueError(f"Too may SRES libraries found: {dlls}")
+        return dlls[0]
+
     def _load_lib(self):
         """Load the SRES C API binary"""
-        lib = ct.CDLL(f"{self._get_shared_library_prefix()}SRES{self._get_shared_library_extension()}")
+        shared_lib = self._find_sres()
+        lib = ct.CDLL(shared_lib)
         return lib
 
     def _load_func(self, funcname: str, argtypes: List, return_type) -> ct.CDLL._FuncPtr:
@@ -37,6 +54,3 @@ class _SRESLoader:
         func.restype = return_type
         func.argtypes = argtypes
         return func
-
-
-
