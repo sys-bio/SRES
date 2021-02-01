@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.17)
 # Set version.
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
-set(VERSION_MICRO 0)
+set(VERSION_MICRO 1)
 
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO})
 
@@ -91,6 +91,13 @@ option(BUILD_PYTHON "build the python API (for SRES only)" ON)
 
 set(README_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Readme.md")
 set(REQUIREMENTS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt")
+
+# Configure the sphinx docs conf.py
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py
+        @ONLY
+)
 
 ############################################################################
 #       include src

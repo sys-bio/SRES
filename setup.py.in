@@ -13,7 +13,7 @@ else:
 
 setup(
     name='sres',
-    version='0.0.0',
+    version='@PROJECT_VERSION@',
     license='MIT',
     long_description=open('Readme.md').read(),
     long_description_content_type="text/markdown",
