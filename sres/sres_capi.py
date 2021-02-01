@@ -18,22 +18,17 @@ class _SRESLoader:
         elif sys.platform == "darwin":
             return ".dylib"
 
-    def _find_sres_dll(self):
-        """Find the SRES shared library"""
-        this_directory = os.path.join(os.path.dirname(__file__))
-        one_directory_up = os.path.dirname(this_directory)
-
-        dlls = glob.glob(os.path.join(one_directory_up, "**/*SRES*" + self._get_shared_library_extension()))
-        if len(dlls) == 0:
-            raise ValueError("SRES library not found")
-        elif len(dlls) > 1:
-            raise ValueError(f"Too may SRES libraries found: {dlls}")
-        return dlls[0]
+    def _get_shared_library_prefix(self):
+        if sys.platform == "linux":
+            return "lib"
+        elif sys.platform == "win32":
+            return ""
+        elif sys.platform == "darwin":
+            return "lib"
 
     def _load_lib(self):
         """Load the SRES C API binary"""
-        shared_lib = self._find_sres_dll()
-        lib = ct.CDLL(shared_lib)
+        lib = ct.CDLL(f"{self._get_shared_library_prefix()}SRES{self._get_shared_library_extension()}")
         return lib
 
     def _load_func(self, funcname: str, argtypes: List, return_type) -> ct.CDLL._FuncPtr:
