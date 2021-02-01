@@ -247,7 +247,11 @@ stages:
         - script: |
             echo "> pwd"
             pwd
-            cd "$(Pipeline.Workspace)\SRES-Windows"
+            echo "> dir"
+            dir
+            echo "> cd Pipeline.Workspace"
+            cd "$(Pipeline.Workspace)"
+            cd "$(Pipeline.Workspace)/SRES-Windows"
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
