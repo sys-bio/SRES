@@ -302,7 +302,7 @@ stages:
         timeoutInMinutes: "0"
         pool:
           vmImage: 'ubuntu-18.04'
-        container: 'quay.io/pypa/manylinux2010_x86_64'
+        container: 'quay.io/pypa/manylinux2014_x86_64:latest'
         variables:
           BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
           SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
@@ -336,7 +336,7 @@ stages:
     - job:
       pool:
         vmImage: 'ubuntu-18.04'
-      container: 'quay.io/pypa/manylinux2010_x86_64'
+      container: 'quay.io/pypa/manylinux2014_x86_64:latest'
       strategy:
         matrix:
           py36:
