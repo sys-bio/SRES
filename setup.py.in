@@ -29,5 +29,5 @@ setup(
     ]},
     include_package_data=True,
     platforms=["Windows", "Unix", "Mac OS-X"],
-    has_ext_modules=lambda: False,
+    has_ext_modules=lambda: True,
 )

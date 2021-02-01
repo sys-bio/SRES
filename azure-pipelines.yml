@@ -6,6 +6,7 @@ stages:
         timeoutInMinutes: "0"
         pool:
           vmImage: 'ubuntu-18.04'
+
         variables:
           BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
           SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
@@ -106,7 +107,22 @@ stages:
               Parallel: true
               ParallelCount: 8
 
-
+  - stage: PipWheels
+    displayName: Build Pip Wheels
+    dependsOn: [BuildMac]
+      - jobs:
+        - job:
+        strategy:
+          matrix:
+            py36:
+              PythonVersion: 3.6
+              PythonName: py36
+            py37:
+              PythonVersion: 3.7
+              PythonName: py37
+            py38:
+              PythonVersion: 3.8
+              PythonName: py38
 
 
 
