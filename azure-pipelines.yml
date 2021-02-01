@@ -237,7 +237,15 @@ stages:
       steps:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
-
+        - powershell: |
+            where.exe conda
+            where.exe python
+            echo "PythonVersion $(PythonVersion)"
+            echo "PythonName $(PythonName)"
+            echo "MinicondaRoot $(MinicondaRoot)"
+            echo "PythonRoot $(PythonRoot)"
+            echo "PythonLibDir $(PythonLibDir)"
+          displayName: PrintPythonVariables
         - download: current
           artifact: SRES-Windows
         # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
