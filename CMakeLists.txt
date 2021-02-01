@@ -115,41 +115,39 @@ if (COPY_BINARY_TO_PYTHON_DIR)
     install(TARGETS SRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
 endif ()
 
-if (BUILD_PYTHON)
-    find_package(Python)
-    # configure the python setup.py
-    configure_file(
-            "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in"
-            "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
-    )
+find_package(Python)
+# configure the python setup.py
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
+)
 
-    install(
-            FILES
-            "${REQUIREMENTS_FILE}"
-            "${README_FILE}"
-            "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
-            DESTINATION .
-    )
+install(
+        FILES
+        "${REQUIREMENTS_FILE}"
+        "${README_FILE}"
+        "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
+        DESTINATION .
+)
 
-    install(
-            FILES
-            sres/__init__.py
-            sres/sres_capi.py
-            sres/sres.py
-            $<TARGET_FILE:SRES>
-            DESTINATION
-            site-packages/sres
-    )
-    install(
-            FILES
-            sres/test/__init__.py
-            sres/test/GaussianProblem.py
-            sres/test/RoadrunnerProblem.py
-            DESTINATION site-packages/sres/test
-    )
+install(
+        FILES
+        sres/__init__.py
+        sres/sres_capi.py
+        sres/sres.py
+        $<TARGET_FILE:SRES>
+        DESTINATION
+        site-packages/sres
+)
+install(
+        FILES
+        sres/test/__init__.py
+        sres/test/GaussianProblem.py
+        sres/test/RoadrunnerProblem.py
+        DESTINATION site-packages/sres/test
+)
 
 
-endif ()
 
 
 
