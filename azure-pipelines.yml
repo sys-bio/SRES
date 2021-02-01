@@ -170,11 +170,11 @@ stages:
             PythonVersion: 3.9
             PythonName: py39
       variables:
-        MinicondaRoot : '/usr/local/miniconda'
+        MinicondaRoot : '/usr/share/miniconda/'
         PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
         PythonLibDir: '$(PythonRoot)/lib'
         PythonExecutable: '$(PythonRoot)/bin/python'
-        CondaExecutable: '$(MinicondaRoot)/condabin/conda'
+        CondaExecutable: '$(MinicondaRoot)/bin/conda'
         PipExecutable: '$(PythonRoot)/bin/pip'
       steps:
         - bash: echo "##vso[task.prependpath]$CONDA/bin"
