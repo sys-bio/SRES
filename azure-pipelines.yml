@@ -110,6 +110,8 @@ stages:
     displayName: Build Pip Wheels for Ubuntu
     jobs:
     - job:
+      pool:
+        vmImage: 'ubuntu-18.04'
       strategy:
         matrix:
           py36:
@@ -148,12 +150,25 @@ stages:
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-Ubuntu'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-Ubuntu
+            Parallel: true
+            ParallelCount: 8
 
   - stage: MacPipWheel
     dependsOn: BuildMac
     displayName: Build Pip Wheels for Mac
     jobs:
     - job:
+      pool:
+        vmImage: 'macOS-10.15'
       strategy:
         matrix:
           py36:
@@ -173,12 +188,11 @@ stages:
         PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
         PythonLibDir: '$(PythonRoot)/lib'
         PythonExecutable: '$(PythonRoot)/bin/python'
-        CondaExecutable: '$(MinicondaRoot)/condabin/conda'
+        CondaExecutable: '$(MinicondaRoot)/bin/conda'
         PipExecutable: '$(PythonRoot)/bin/pip'
       steps:
         - bash: echo "##vso[task.prependpath]$CONDA/bin"
           displayName: Add conda to PATH
-
         - download: current
           artifact: SRES-MacOS
         # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
@@ -186,19 +200,43 @@ stages:
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
-            cd $(Pipeline.Workspace)/SRES-Mac
+            echo "> Build.ArtifactStagingDirectory: "
+            echo "$(Build.ArtifactStagingDirectory)
+            echo "> Pipeline.Workspace: "
+            echo "$(Pipeline.Workspace)
+            echo "> pwd: "
+            pwd
+            echo "> ls: "
+            ls
+            echo "> which conda"
+            which conda
+            echo "> cd $(Pipeline.Workspace)/SRES-MacOS"
+            cd $(Pipeline.Workspace)/SRES-MacOS
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
             $(PythonExecutable) setup.py bdist_wheel
-            $(PipExecutable) install $(realpath $(ls dist))
+            $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-MacOS'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-MacOS
+            Parallel: true
+            ParallelCount: 8
 
   - stage: WindowsPipWheel
     dependsOn: BuildWindows
     displayName: Build Pip Wheels for Windows
     jobs:
     - job:
+      pool:
+        vmImage: 'windows-2019'
       strategy:
         matrix:
           py36:
@@ -214,32 +252,51 @@ stages:
             PythonVersion: 3.9
             PythonName: py39
       variables:
-          MinicondaRoot : 'C:\Miniconda'
-          PythonRoot: '$(MinicondaRoot)\envs\$(PythonName)'
-          PythonLibDir: '$(PythonRoot)\Lib'
-          PythonScriptsDir: '$(PythonRoot)\Scripts'
-          PythonExecutable: '$(PythonRoot)\python.exe'
-          PipExecutable: '$(PythonScriptsDir)\pip.exe'
+          MinicondaRoot : 'C:/Miniconda'
+          PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
+          PythonLibDir: '$(PythonRoot)/Lib'
+          PythonScriptsDir: '$(PythonRoot)/Scripts'
+          PythonExecutable: '$(PythonRoot)/python.exe'
+          CondaExecutable: '$(MinicondaRoot)/Scripts/conda.exe'
+          PipExecutable: '$(PythonScriptsDir)/pip.exe'
       steps:
-        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+        - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
-
+        - powershell: |
+            where.exe conda
+            where.exe python
+            echo "PythonVersion $(PythonVersion)"
+            echo "PythonName $(PythonName)"
+            echo "MinicondaRoot $(MinicondaRoot)"
+            echo "PythonRoot $(PythonRoot)"
+            echo "PythonLibDir $(PythonLibDir)"
+          displayName: PrintPythonVariables
         - download: current
           artifact: SRES-Windows
-        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-        # We need to take ownership if we want to update conda or install packages globally
-        - bash: sudo chown -R $USER $CONDA
-          displayName: Take ownership of conda installation
-        - script: |
-            echo "which.exe conda: " 
-            where.exe conda
-            cd $(Pipeline.Workspace)/SRES-Windows
+        - powershell: |
+            echo "> pwd"
+            pwd
+            echo "> dir"
+            dir
+            echo "> cd Pipeline.Workspace"
+            cd "$(Pipeline.Workspace)"
+            cd "$(Pipeline.Workspace)/SRES-Windows"
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
             $(PythonExecutable) setup.py bdist_wheel
-            $(PipExecutable) install $(realpath $(ls dist))
+            $(PipExecutable) install "$(pwd)\dist\$(ls dist)"
             $(PythonExecutable) -c "import sres"
-
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-Windows'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-Windows
+            Parallel: true
+            ParallelCount: 8
 
 

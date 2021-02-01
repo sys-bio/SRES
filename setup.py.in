@@ -1,20 +1,18 @@
-
 import sys
 
 from setuptools import setup
 
 if sys.platform == "win32":
+    SHARED_LIB_PREFIX = ""
     SHARED_LIB_EXT = ".dll"
-    SHARED_LIB_PREFIX = ""
 elif sys.platform == "darwin":
-    SHARED_LIB_PREFIX = ""
-    SHARED_LIB_EXT = ".dylib"
-else:
-    SHARED_LIB_EXT = ".so"
     SHARED_LIB_PREFIX = "lib"
-
-
-
+    SHARED_LIB_EXT = ".dylib"
+elif sys.platform == "linux":
+    SHARED_LIB_PREFIX = "lib"
+    SHARED_LIB_EXT = ".so"
+else:
+    raise ValueError("unknown platform")
 
 setup(
     name='sres',
