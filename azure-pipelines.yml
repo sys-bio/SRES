@@ -1,12 +1,12 @@
 stages:
-  - stage: Build
-    displayName: Build
+  - stage: BuildUbuntu
+    dependsOn: []
+    displayName: Build Ubuntu 18.04
     jobs:
-      - job: BuildLinux
+      - job: BuildUbuntuJob
         timeoutInMinutes: "0"
         pool:
           vmImage: 'ubuntu-18.04'
-
         variables:
           BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
           SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
@@ -14,16 +14,13 @@ stages:
         steps:
           - checkout: self
             submodules: recursive
-
           - bash: echo "##vso[task.prependpath]$CONDA/bin"
             displayName: Add conda to PATH
-
           - script: |
               mkdir -p $(BUILD_DIR)
               cd $(BUILD_DIR)
               cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
               cmake --build $(BUILD_DIR) --target install --config Release -j 12
-
           - task: CopyFiles@2
             inputs:
               sourceFolder: '$(INSTALL_DIR)'
@@ -32,11 +29,15 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: SRES-linux
+              artifactName: SRES-Ubuntu
               Parallel: true
               ParallelCount: 8
 
-      - job: BuildMac
+  - stage: BuildMac
+    dependsOn: []
+    displayName: Build MacOS
+    jobs:
+      - job: BuildMacJob
         timeoutInMinutes: "0"
         pool:
           vmImage: 'macOS-10.15'
@@ -47,21 +48,17 @@ stages:
         steps:
           - checkout: self
             submodules: recursive
-
           - bash: echo "##vso[task.prependpath]$CONDA/bin"
             displayName: Add conda to PATH
-
           # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
           # We need to take ownership if we want to update conda or install packages globally
           - bash: sudo chown -R $USER $CONDA
             displayName: Take ownership of conda installation
-
           - script: |
               mkdir -p $(BUILD_DIR)
               cd $(BUILD_DIR)
               cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
               cmake --build $(BUILD_DIR) --target install --config Release -j 12
-
           - task: CopyFiles@2
             inputs:
               sourceFolder: '$(INSTALL_DIR)'
@@ -70,10 +67,14 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: SRES-mac
+              artifactName: SRES-MacOS
               Parallel: true
               ParallelCount: 8
 
+  - stage: BuildWindows
+    displayName: Build Windows
+    dependsOn: []
+    jobs:
       - job: BuildWindows
         timeoutInMinutes: "0"
         pool:
@@ -85,16 +86,13 @@ stages:
         steps:
           - checkout: self
             submodules: recursive
-
           - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
             displayName: Add conda to PATH
-
           - powershell: |
               New-Item -ItemType Directory -Force -Path $(BUILD_DIR)
               cd $(BUILD_DIR)
               cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
               cmake --build $(BUILD_DIR) --target install --config Release -j 12
-
           - task: CopyFiles@2
             inputs:
               sourceFolder: '$(INSTALL_DIR)'
@@ -103,12 +101,57 @@ stages:
           - task: PublishBuildArtifacts@1
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: SRES-windows
+              artifactName: SRES-Windows
               Parallel: true
               ParallelCount: 8
 
-  - stage: PipWheels
-    displayName: Build Pip Wheels
+  - stage: UbuntuPipWheel
+    dependsOn: BuildUbuntu
+    displayName: Build Pip Wheels for Ubuntu
+    jobs:
+    - job:
+      strategy:
+        matrix:
+          py36:
+            PythonVersion: 3.6
+            PythonName: py36
+          py37:
+            PythonVersion: 3.7
+            PythonName: py37
+          py38:
+            PythonVersion: 3.8
+            PythonName: py38
+          py39:
+            PythonVersion: 3.9
+            PythonName: py39
+      variables:
+          MinicondaRoot : '/usr/share/miniconda'
+          PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
+          PythonLibDir: '$(PythonRoot)/lib'
+          PythonExecutable: '$(PythonRoot)/bin/python'
+          CondaExecutable: '$(MinicondaRoot)/bin/conda'
+          PipExecutable: '$(PythonRoot)/bin/pip'
+      steps:
+        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+          displayName: Add conda to PATH
+        - download: current
+          artifact: SRES-Ubuntu
+        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+        # We need to take ownership if we want to update conda or install packages globally
+        - bash: sudo chown -R $USER $CONDA
+          displayName: Take ownership of conda installation
+        - script: |
+            cd $(Pipeline.Workspace)/SRES-Ubuntu
+            $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
+            # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+            # export LD_LIBRARY_PATH=$(PythonLibDir)
+            $(PythonExecutable) setup.py bdist_wheel
+            $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
+            $(PythonExecutable) -c "import sres"
+
+  - stage: MacPipWheel
+    dependsOn: BuildMac
+    displayName: Build Pip Wheels for Mac
     jobs:
     - job:
       strategy:
@@ -137,37 +180,66 @@ stages:
           displayName: Add conda to PATH
 
         - download: current
-          artifact: SRES-mac
+          artifact: SRES-MacOS
         # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
         # We need to take ownership if we want to update conda or install packages globally
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
-            echo "Cd'ing to $(Pipeline.Workspace)/SRES-mac"
-            cd $(Pipeline.Workspace)/SRES-mac
-            echo "doing a ls"
-            ls
-            echo "Creating a conda environment"
+            cd $(Pipeline.Workspace)/SRES-Mac
             $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
-            echo "Creating a conda environment"
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install $(realpath $(ls dist))
             $(PythonExecutable) -c "import sres"
 
-#          - task: CopyFiles@2
-#            inputs:
-#              contents: '$(INSTALL_DIR)/**'
-#              targetFolder: $(Build.ArtifactStagingDirectory)/Install-$(PythonName)
-#            displayName: Copy Install Tree to Staging Area
-#          - task: CopyFiles@2
-#            inputs:
-#              contents: '$(INSTALL_DIR)/dist/**'
-#              targetFolder: $(Build.ArtifactStagingDirectory)/pip-wheels
-#            displayName: Copy Pip Wheels to Staging Area
-#          - publish: $(Build.ArtifactStagingDirectory)
-#            artifact: PipWheels-$(Agent.OS)-$(PythonName)
-#            displayName: Publish Pip Wheels Artifacts
+  - stage: WindowsPipWheel
+    dependsOn: BuildWindows
+    displayName: Build Pip Wheels for Windows
+    jobs:
+    - job:
+      strategy:
+        matrix:
+          py36:
+            PythonVersion: 3.6
+            PythonName: py36
+          py37:
+            PythonVersion: 3.7
+            PythonName: py37
+          py38:
+            PythonVersion: 3.8
+            PythonName: py38
+          py39:
+            PythonVersion: 3.9
+            PythonName: py39
+      variables:
+          MinicondaRoot : 'C:\Miniconda'
+          PythonRoot: '$(MinicondaRoot)\envs\$(PythonName)'
+          PythonLibDir: '$(PythonRoot)\Lib'
+          PythonScriptsDir: '$(PythonRoot)\Scripts'
+          PythonExecutable: '$(PythonRoot)\python.exe'
+          PipExecutable: '$(PythonScriptsDir)\pip.exe'
+      steps:
+        - bash: echo "##vso[task.prependpath]$CONDA/bin"
+          displayName: Add conda to PATH
+
+        - download: current
+          artifact: SRES-Windows
+        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+        # We need to take ownership if we want to update conda or install packages globally
+        - bash: sudo chown -R $USER $CONDA
+          displayName: Take ownership of conda installation
+        - script: |
+            echo "which.exe conda: " 
+            where.exe conda
+            cd $(Pipeline.Workspace)/SRES-Windows
+            $(CondaExecutable) create --quiet --yes --name $(PythonName) python=$(PythonVersion)
+            # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+            # export LD_LIBRARY_PATH=$(PythonLibDir)
+            $(PythonExecutable) setup.py bdist_wheel
+            $(PipExecutable) install $(realpath $(ls dist))
+            $(PythonExecutable) -c "import sres"
+
 
 
