@@ -110,6 +110,8 @@ stages:
     displayName: Build Pip Wheels for Ubuntu
     jobs:
     - job:
+      pool:
+        vmImage: 'ubuntu-18.04'
       strategy:
         matrix:
           py36:
@@ -155,6 +157,8 @@ stages:
     displayName: Build Pip Wheels for Mac
     jobs:
     - job:
+      pool:
+        vmImage: 'macOS-10.15'
       strategy:
         matrix:
           py36:
@@ -212,6 +216,8 @@ stages:
     displayName: Build Pip Wheels for Windows
     jobs:
     - job:
+      pool:
+        vmImage: 'windows-2019'
       strategy:
         matrix:
           py36:
