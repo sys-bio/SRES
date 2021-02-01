@@ -203,7 +203,7 @@ stages:
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
             $(PythonExecutable) setup.py bdist_wheel
-            $(PipExecutable) install $(realpath $(ls dist))
+            $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
 
 
@@ -250,7 +250,7 @@ stages:
             # echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
             # export LD_LIBRARY_PATH=$(PythonLibDir)
             $(PythonExecutable) setup.py bdist_wheel
-            $(PipExecutable) install $(realpath $(ls dist))
+            $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
             $(PythonExecutable) -c "import sres"
 
 
