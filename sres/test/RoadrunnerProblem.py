@@ -1,16 +1,11 @@
-import pylab as plt
 import numpy as np
 import tellurium as te
-import roadrunner
-import time
-from typing import List
 from sres import SRES
-import ctypes as ct
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
 
 ###################################################################################3
-#   Step 1: highjacking telluriums interface to roadrunner
+#   highjacking telluriums interface to roadrunner
 #
 
 def freeParameters(self):
@@ -101,7 +96,7 @@ def cost_fun(parameters, fitness, constraints):
     fitness:    This is the value that you must compute and assign.
 
     """
-    # important for roadrunner: simulation data are persistant. Therefore
+    # important for roadrunner: simulation data are persistent. Therefore
     # we reset the model before every simulation
     r.reset()
 
@@ -120,6 +115,7 @@ def cost_fun(parameters, fitness, constraints):
     # update fitness. This step is crucial and evey cost function
     # must have this line
     fitness.contents.value = cost
+
 
 
 sres = SRES(

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.17)
 # Set version.
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
-set(VERSION_MICRO 0)
+set(VERSION_MICRO 1)
 
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO})
 
@@ -87,20 +87,22 @@ if (UNIX AND NOT APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} -lstdc++fs")
 endif ()
 
-option(BUILD_PYTHON "build the python API (for SRES only)" OFF)
+option(BUILD_PYTHON "build the python API (for SRES only)" ON)
+
 set(README_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Readme.md")
+set(REQUIREMENTS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt")
+
+# Configure the sphinx docs conf.py
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py
+        @ONLY
+)
 
 ############################################################################
 #       include src
 #
-if (BUILD_PYTHON)
-    find_package(Python)
-    # configure the python setup.py
-    set(PYTHON_SETUP_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in)
-    set(PYTHON_SETUP_FILE ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
-    configure_file(${PYTHON_SETUP_CONFIG_FILE} ${PYTHON_SETUP_FILE} @ONLY)
 
-endif ()
 
 add_subdirectory(external)
 
@@ -113,11 +115,41 @@ if (COPY_BINARY_TO_PYTHON_DIR)
     install(TARGETS SRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
 endif ()
 
+if (BUILD_PYTHON)
+    find_package(Python)
+    # configure the python setup.py
+    configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
+    )
+
+    install(
+            FILES
+            "${REQUIREMENTS_FILE}"
+            "${README_FILE}"
+            "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
+            DESTINATION .
+    )
+
+    install(
+            FILES
+            sres/__init__.py
+            sres/sres_capi.py
+            sres/sres.py
+            $<TARGET_FILE:SRES>
+            DESTINATION
+            site-packages/sres
+    )
+    install(
+            FILES
+            sres/test/__init__.py
+            sres/test/GaussianProblem.py
+            sres/test/RoadrunnerProblem.py
+            DESTINATION site-packages/sres/test
+    )
 
 
-
-
-
+endif ()
 
 
 

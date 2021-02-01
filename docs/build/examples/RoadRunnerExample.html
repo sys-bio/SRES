@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>RoadRunner Example &mdash; sres 0.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Gaussian Problem" href="GaussianProblem.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> sres
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="GaussianProblem.html">Gaussian Problem</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">RoadRunner Example</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sres</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="examples.html">Examples</a> &raquo;</li>
+        
+      <li>RoadRunner Example</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/examples/RoadRunnerExample.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="roadrunner-example">
+<h1>RoadRunner Example<a class="headerlink" href="#roadrunner-example" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tellurium</span> <span class="k">as</span> <span class="nn">te</span>
+<span class="kn">from</span> <span class="nn">sres</span> <span class="kn">import</span> <span class="n">SRES</span>
+<span class="kn">from</span> <span class="nn">tellurium.roadrunner.extended_roadrunner</span> <span class="kn">import</span> <span class="n">ExtendedRoadRunner</span>
+
+
+<span class="c1">###################################################################################3</span>
+<span class="c1">#   highjacking telluriums interface to roadrunner</span>
+<span class="c1">#</span>
+
+<span class="k">def</span> <span class="nf">freeParameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Roadrunner models do not have a concept of &quot;free&quot; or &quot;fixed&quot;</span>
+<span class="sd">    parameters (maybe it should?). Either way, we add a cheeky method</span>
+<span class="sd">    to the tellurium interface to roadrunner to return the names</span>
+<span class="sd">    of the parameters we want to fit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;k1&quot;</span><span class="p">,</span> <span class="s2">&quot;k2&quot;</span><span class="p">]</span>
+
+<span class="c1"># assign, and now freeParameters is callable bound to ExtendedRoadrunner types</span>
+<span class="n">ExtendedRoadRunner</span><span class="o">.</span><span class="n">freeParameters</span> <span class="o">=</span> <span class="n">freeParameters</span>
+
+<span class="c1">#####################################################################################3</span>
+<span class="c1">#   model and data generation</span>
+<span class="c1">#</span>
+
+<span class="c1"># globally scoped model</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">loada</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">   S1 -&gt; S2; k1*S1;</span>
+<span class="s2">   S2 -&gt; S3; k2*S2;</span>
+<span class="s2">   S1 = 1; S2 = 0; S3 = 0;</span>
+<span class="s2">   k1 = 0.15; k2 = 0.45;</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Simulate &quot;experimental&quot; data</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
+
+<span class="c1"># We&#39;ll just create noise data for S2</span>
+<span class="n">x_data</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span>
+<span class="n">y_data</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;[S2]&#39;</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">)):</span>
+    <span class="c1"># Add random noise to synthetic data</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">y_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">t</span>
+
+
+<span class="c1">##############################################################</span>
+<span class="c1">#   Configure the optimization</span>
+<span class="c1">#</span>
+
+<span class="nd">@SRES</span><span class="o">.</span><span class="n">COST_FUNCTION_CALLBACK</span>
+<span class="k">def</span> <span class="nf">cost_fun</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">fitness</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Brief</span>
+<span class="sd">    -----</span>
+<span class="sd">    Compute difference between experimental dataset and model simulation with candidate parameters.</span>
+<span class="sd">    This cost function is user defined and used as input to the main SRES algorithm. The input</span>
+<span class="sd">    to this function is always [parameters, fitness and constraints]. You do not need to worry</span>
+<span class="sd">    about generating candidate parameters as they are generated by the underlying algorithm. You do</span>
+<span class="sd">    however have to worry about updating the fitness value, which you do like this:</span>
+
+<span class="sd">        fitness.contents.value = calculated_cost</span>
+
+<span class="sd">    Where calculated_cost is a float computed by your function. Note, that even though</span>
+<span class="sd">    we haven&#39;t used the constraints argument in this cost function, we still need to pass it in</span>
+<span class="sd">    as an input parameter.</span>
+
+<span class="sd">    Details</span>
+<span class="sd">    -------</span>
+<span class="sd">    The underlying SRES C code requires as input a function pointer to a cost function</span>
+<span class="sd">    that has the following signature:</span>
+
+<span class="sd">        typedef void(*ESfcnFG)(double *, double *, double *);</span>
+
+<span class="sd">    We can create a cost function in Python to pass to C by using the</span>
+<span class="sd">    :py:class:`SRES.COST_FUNCTION_CALLBACK` decorator. Since the C end is</span>
+<span class="sd">    expecting a function with three double pointer types, we must have</span>
+<span class="sd">    as arguments to our cost function, three arguments.</span>
+
+<span class="sd">    When coding the cost function, you need to remember that the types of</span>
+<span class="sd">    parameter, fitness and constraints are ctypes pointers to double</span>
+<span class="sd">    arrays in the case of the parameter and constraints argument and</span>
+<span class="sd">    a pointer to a double in the case of fitness. To do computation</span>
+<span class="sd">    with these types you need the value that the pointer points to, not</span>
+<span class="sd">    the pointer. To get these, you use:</span>
+<span class="sd">        &gt;&gt;&gt; parameters.contents[0]</span>
+<span class="sd">    In the case of pointer to a double array or</span>
+<span class="sd">        &gt;&gt;&gt; fitness.contents.value</span>
+<span class="sd">    in the case of a pointer to a double.</span>
+
+<span class="sd">    Args</span>
+<span class="sd">    ----</span>
+<span class="sd">    parameters: A list of candidate parameters with the same size as the</span>
+<span class="sd">                dimensionality of your defined optimization problem.</span>
+<span class="sd">    fitness:    This is the value that you must compute and assign.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># important for roadrunner: simulation data are persistent. Therefore</span>
+    <span class="c1"># we reset the model before every simulation</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="c1"># set the new parameter values</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">)):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="c1"># compute cost</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;S2&quot;</span><span class="p">])</span> <span class="c1"># note, same size as experimental data</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">cost</span> <span class="o">+=</span> <span class="p">(</span><span class="n">y_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">sim</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c1"># update fitness. This step is crucial and evey cost function</span>
+    <span class="c1"># must have this line</span>
+    <span class="n">fitness</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">cost</span>
+
+
+
+<span class="n">sres</span> <span class="o">=</span> <span class="n">SRES</span><span class="p">(</span>
+    <span class="n">cost_function</span><span class="o">=</span><span class="n">cost_fun</span><span class="p">,</span>
+    <span class="n">ngen</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">lb</span><span class="o">=</span><span class="p">[</span><span class="mf">0.01</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">ub</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">parent_popsize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">child_popsize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sres</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="c1">#</span>
+<span class="c1"># guess = [0.2, 0.3]  # initial guess for params</span>
+<span class="c1"># p, cov, infodict, mesg, ier = optimize.leastsq(f_resid, guess, full_output=True)</span>
+<span class="c1"># r.resetAll()</span>
+<span class="c1"># print(&quot;Parameter values are &quot;, p, &quot;Diff = &quot;, p[0] - r.k1, p[1] - r.k2)</span>
+<span class="c1"># print(mesg)</span>
+<span class="c1"># print(cov)</span>
+<span class="c1"># r.reset()</span>
+<span class="c1"># for i in range(0, nParameters):</span>
+<span class="c1">#     r.model[toFit[i]] = p[i]</span>
+<span class="c1"># m = r.simulate(0, 20, 100, [&#39;time&#39;, &#39;S1&#39;, &#39;S2&#39;, &#39;S3&#39;])</span>
+<span class="c1"># plt.plot(x_data, y_data, &#39;sr&#39;)</span>
+<span class="c1"># plt.plot(m[:, 0], m[:, 1], &#39;-b&#39;)</span>
+<span class="c1"># plt.plot(m[:, 0], m[:, 2], &#39;-b&#39;)</span>
+<span class="c1"># plt.plot(m[:, 0], m[:, 3], &#39;-b&#39;)</span>
+<span class="c1"># plt.xlabel(&#39;Time&#39;, {&quot;fontsize&quot;: 16})</span>
+<span class="c1"># plt.ylabel(&quot;Concentration, S2&quot;, {&quot;fontsize&quot;: 16})</span>
+<span class="c1"># plt.legend((&#39;data&#39;, &#39;fit&#39;), loc=0)</span>
+<span class="c1"># plt.show()</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="GaussianProblem.html" class="btn btn-neutral float-left" title="Gaussian Problem" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Ciaran Welsh.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
