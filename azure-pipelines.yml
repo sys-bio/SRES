@@ -227,13 +227,13 @@ stages:
             PythonVersion: 3.9
             PythonName: py39
       variables:
-          MinicondaRoot : 'C:\\Miniconda'
-          PythonRoot: '$(MinicondaRoot)\\envs\\$(PythonName)'
-          PythonLibDir: '$(PythonRoot)\\Lib'
-          PythonScriptsDir: '$(PythonRoot)\\Scripts'
-          PythonExecutable: '$(PythonRoot)\\python.exe'
-          CondaExecutable: '$(MinicondaRoot)\\Scripts\\conda.exe'
-          PipExecutable: '$(PythonScriptsDir)\\pip.exe'
+          MinicondaRoot : 'C:/Miniconda'
+          PythonRoot: '$(MinicondaRoot)/envs/$(PythonName)'
+          PythonLibDir: '$(PythonRoot)/Lib'
+          PythonScriptsDir: '$(PythonRoot)/Scripts'
+          PythonExecutable: '$(PythonRoot)/python.exe'
+          CondaExecutable: '$(MinicondaRoot)/Scripts/conda.exe'
+          PipExecutable: '$(PythonScriptsDir)/pip.exe'
       steps:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
