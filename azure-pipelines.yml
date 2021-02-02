@@ -50,8 +50,6 @@ stages:
             submodules: recursive
           - bash: echo "##vso[task.prependpath]$CONDA/bin"
             displayName: Add conda to PATH
-          # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-          # We need to take ownership if we want to update conda or install packages globally
           - bash: sudo chown -R $USER $CONDA
             displayName: Take ownership of conda installation
           - script: |
@@ -138,8 +136,6 @@ stages:
           displayName: Add conda to PATH
         - download: current
           artifact: SRES-Ubuntu
-        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-        # We need to take ownership if we want to update conda or install packages globally
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
@@ -195,8 +191,6 @@ stages:
           displayName: Add conda to PATH
         - download: current
           artifact: SRES-MacOS
-        # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-        # We need to take ownership if we want to update conda or install packages globally
         - bash: sudo chown -R $USER $CONDA
           displayName: Take ownership of conda installation
         - script: |
@@ -300,3 +294,92 @@ stages:
             ParallelCount: 8
 
 
+  - stage: BuildManyLinux
+    dependsOn: []
+    displayName: Build ManyLinux
+    jobs:
+      - job: BuildManyLinuxJob
+        timeoutInMinutes: "0"
+        pool:
+          vmImage: 'ubuntu-18.04'
+        container: 'quay.io/pypa/manylinux2014_x86_64:latest'
+        variables:
+          BUILD_DIR: '$(System.DefaultWorkingDirectory)/build'
+          SOURCE_DIR: '$(System.DefaultWorkingDirectory)'
+          INSTALL_DIR: '$(System.DefaultWorkingDirectory)/install-azure'
+        steps:
+          - checkout: self
+            submodules: recursive
+          - bash: echo "##vso[task.prependpath]$CONDA/bin"
+            displayName: Add conda to PATH
+          - script: |
+              mkdir -p $(BUILD_DIR)
+              cd $(BUILD_DIR)
+              cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) ..
+              cmake --build $(BUILD_DIR) --target install --config Release -j 12
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: '$(INSTALL_DIR)'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: SRES-ManyLinux
+              Parallel: true
+              ParallelCount: 8
+
+  - stage: ManyLinuxPipWheel
+    dependsOn: BuildManyLinux
+    displayName: Build Pip Wheels for ManyLinux
+    jobs:
+    - job:
+      pool:
+        vmImage: 'ubuntu-18.04'
+      container: 'quay.io/pypa/manylinux2014_x86_64:latest'
+      strategy:
+        matrix:
+          py36:
+            PythonVersion: cp36-cp36m
+          py37:
+            PythonVersion: cp37-cp37m
+          py38:
+            PythonVersion: cp38-cp38
+          py39:
+            PythonVersion: cp39-cp39
+      variables:
+          PythonRoot: '/opt/python/$(PythonVersion)'
+          PythonLibDir: '$(PythonRoot)/lib'
+          PythonBinDir: '$(PythonRoot)/bin'
+          PythonExecutable: '$(PythonBinDir)/python'
+          PipExecutable: '$(PythonBinDir)/pip'
+      steps:
+        - download: current
+          artifact: SRES-ManyLinux
+        - script: |
+            echo "> ls"
+            ls
+            echo "> cd /"
+            cd /
+            echo "> ls"
+            ls
+            echo "> cd opt"
+            cd opt
+            echo "> cd python"
+            cd python
+        - script: |
+            cd $(Pipeline.Workspace)/SRES-ManyLinux
+            $(PythonExecutable) setup.py bdist_wheel
+            $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
+            $(PythonExecutable) -c "import sres"
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: '$(Pipeline.Workspace)/SRES-ManyLinux'
+            contents: '**'
+            targetFolder: '$(Build.ArtifactStagingDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: '$(Build.ArtifactStagingDirectory)'
+            artifactName: SRES-Python-ManyLinux
+            Parallel: true
+            ParallelCount: 8
