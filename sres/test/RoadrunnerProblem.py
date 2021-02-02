@@ -120,13 +120,27 @@ def cost_fun(parameters, fitness, constraints):
 
 sres = SRES(
     cost_function=cost_fun,
-    ngen=200,
+    ngen=20,
     lb=[0.01]*2,
     ub=[10]*2,
-    parent_popsize=100,
-    child_popsize=100,
+    parent_popsize=1000,
+    child_popsize=1000,
 )
 sres.fit()
+
+
+
+param_grid = [
+  {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
+  {'C': [1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
+ ]
+
+
+
+
+
+
+
 #
 # guess = [0.2, 0.3]  # initial guess for params
 # p, cov, infodict, mesg, ier = optimize.leastsq(f_resid, guess, full_output=True)

@@ -23,7 +23,7 @@ class SRES:
         BoundaryArray = (ct.c_double * self.dim.value)
         self.ub = ct.pointer(BoundaryArray(*ub))
         self.lb = ct.pointer(BoundaryArray(*lb))
-        self.parent_popsize = parent_popsize
+        self.parent_popsize = ct.c_int32(parent_popsize)
         self.constraint = ct.c_int32(0)
         self.child_popsize = ct.c_int32(child_popsize)
         self.ngen = ct.c_int32(ngen)
