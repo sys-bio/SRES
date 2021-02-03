@@ -47,7 +47,7 @@ double do_nothing_transform(double x) {
 }
 
 ESfcnTrsfm *makeTransformFun(int numEstimatedParams) {
-    ESfcnTrsfm *trsfm = (ESfcnTrsfm *) calloc(numEstimatedParams, sizeof(ESfcnTrsfm) );
+    ESfcnTrsfm *trsfm = (ESfcnTrsfm *) calloc(numEstimatedParams, sizeof(ESfcnTrsfm));
     for (int i = 0; i < numEstimatedParams; i++) {
         trsfm[i] = do_nothing_transform;
     }
@@ -93,7 +93,6 @@ ESStatistics **makeESStatistics() {
 
     return pp;
 }
-
 
 
 /*********************************************************************
@@ -225,12 +224,11 @@ void ESInitialParam(ESParameter **param, ESfcnTrsfm *trsfm, \
     (*param)->varphi = varphi;
     (*param)->retry = retry;
 
-    if (es == esDefESSlash)
-        (*param)->eslambda = lambda;
-    else if (es == esDefESPlus)
+    if (es == esDefESPlus) {
         (*param)->eslambda = lambda + miu;
-    else
+    } else {
         (*param)->eslambda = lambda;
+    }
 
     (*param)->chi = 1.0 / (2 * dim) + 1.0 / (2 * sqrt(dim));
     (*param)->varphi = sqrt((2.0 / (*param)->chi) * log((1.0 / alpha)    \
@@ -354,6 +352,7 @@ void ESInitialIndividual(ESIndividual **indvdl, ESParameter *param) {
 
     for (i = 0; i < dim; i++) {
         (*indvdl)->op[i] = ShareRand(lb[i], ub[i]);
+        // sp == sigma prime!!!
         (*indvdl)->sp[i] = (ub[i] - lb[i]) / sqrt(dim);
     }
 
@@ -363,7 +362,6 @@ void ESInitialIndividual(ESIndividual **indvdl, ESParameter *param) {
         if ((*indvdl)->g[i] > 0.0)
             (*indvdl)->phi += ((*indvdl)->g[i]) * ((*indvdl)->g[i]);
     }
-
     return;
 }
 
@@ -569,8 +567,8 @@ void ESPrintStat(ESStatistics *stats, ESParameter *param) {
  ** -> Mutate (recalculate f/g/phi) -> do statistics analysis on    **
  ** this generation -> print statistics information                 **
  *********************************************************************/
-void ESStep(ESPopulation **population, ESParameter **param, \
-            ESStatistics **stats, double pf) {
+double ESStep(ESPopulation **population, ESParameter **param, \
+            ESStatistics **stats, double pf, bool printStats) {
     ESSRSort((*population)->f, (*population)->phi, pf, (*param)->eslambda, \
            (*param)->eslambda, (*population)->index);
     ESSortPopulation(*population, *param);
@@ -580,8 +578,17 @@ void ESStep(ESPopulation **population, ESParameter **param, \
     ESMutate(*population, *param);
 
     ESDoStat(*stats, *population, *param);
+    if (printStats)
+        ESPrintStat(*stats, *param);
 
-    ESPrintStat(*stats, *param);
+    return (*stats)->bestindvdl->f;
+}
+
+/*
+ * must be called after ESStep
+ */
+double* ESGetBestParameters(ESStatistics ** stats){
+    return (*stats)->bestindvdl->op;
 }
 
 /*********************************************************************
@@ -623,6 +630,8 @@ void ESSortPopulation(ESPopulation *population, ESParameter *param) {
  ** miu -> lambda : 1..miu,1..miu,..,lambda                         **
  *********************************************************************/
 void ESSelectPopulation(ESPopulation *population, ESParameter *param) {
+    // miu = child population
+    // lambda = parent population
     int i, j;
     int miu, lambda, eslambda;
 
@@ -717,6 +726,7 @@ void ESMutate(ESPopulation *population, ESParameter *param) {
         }
     }
 
+
     for (i = miu - 1; i < lambda; i++) {
         randscalar = ShareNormalRand(0, 1);
         ShareNormalRandVec(randvec, dim, 0, 1);
@@ -729,11 +739,17 @@ void ESMutate(ESPopulation *population, ESParameter *param) {
         }
     }
 
+
+    // (cw) note: this is where the bug lies.
     for (i = 0; i < miu - 1; i++) {
         individual = population->member[i];
-        for (j = 0; j < dim; j++)
+        // j from 0 to dim. if dim is 2 then j should be 0 and 1.
+        // so why is j 2?
+        for (j = 0; j < dim; j++) {
             individual->op[j] = individual->op[j] + gamma * (op_[0][j] - op_[i + 1][j]);
+        }
     }
+
     for (i = miu - 1; i < lambda; i++) {
         individual = population->member[i];
         for (j = 0; j < dim; j++)

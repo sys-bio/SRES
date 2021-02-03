@@ -3,6 +3,14 @@ import tellurium as te
 from sres import SRES
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib as mpl
+from typing import List, Tuple, Dict
+import os
+
+mpl.use("TkAgg")
+
 
 ###################################################################################3
 #   highjacking telluriums interface to roadrunner
@@ -15,7 +23,8 @@ def freeParameters(self):
     to the tellurium interface to roadrunner to return the names
     of the parameters we want to fit
     """
-    return ["k1", "k2"]
+    return ["k2", "k3"]
+
 
 # assign, and now freeParameters is callable bound to ExtendedRoadrunner types
 ExtendedRoadRunner.freeParameters = freeParameters
@@ -25,23 +34,33 @@ ExtendedRoadRunner.freeParameters = freeParameters
 #
 
 # globally scoped model
-r = te.loada("""
+ANTIMONY_STRING = """
    S1 -> S2; k1*S1;
    S2 -> S3; k2*S2;
+   S3 -> S1; k3*S3;
    S1 = 1; S2 = 0; S3 = 0;
-   k1 = 0.15; k2 = 0.45;
-""")
+   k1 = 0.15; k2 = 0.45; k3 = 15;
+"""
+r = te.loada(ANTIMONY_STRING)
 
-# Simulate "experimental" data
-m = r.simulate(0, 20, 21)
 
-# We'll just create noise data for S2
-x_data = m['time']
-y_data = m['[S2]']
+def get_data(**params) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    r.reset()
+    for k, v in params.items():
+        setattr(r, k, v)
 
+    # Simulate "experimental" data
+    m = r.simulate(0, 20, 21)
+    x_data = m["time"]  # only time
+    y_data = m[:, 1:]  # remove time
+    return x_data, y_data, r.timeCourseSelections[1:]
+
+
+x_data, y_data, selections = get_data(k1=0.15, k2=0.45, k3=0.05)
+
+# Add random noise to synthetic data
 for i in range(0, len(y_data)):
-    # Add random noise to synthetic data
-    t = np.random.normal(0, 0.05)
+    t = np.random.normal(0, 0.01)
     y_data[i] = y_data[i] + t
 
 
@@ -96,53 +115,208 @@ def cost_fun(parameters, fitness, constraints):
     fitness:    This is the value that you must compute and assign.
 
     """
-    # important for roadrunner: simulation data are persistent. Therefore
-    # we reset the model before every simulation
-    r.reset()
-
-    # set the new parameter values
-    for i in range(len(parameters.contents)):
-        param = r.freeParameters()[i]
-        val = parameters.contents[i]
-        setattr(r, param, val)
-
-    # compute cost
-    sim = r.simulate(0, 20, 21, ["S2"]) # note, same size as experimental data
-    cost = 0
-    for i in range(y_data.shape[0]):
-        cost += (y_data[i] - sim[i]) ** 2
+    x, y, sel = get_data(
+        **dict(
+            zip(r.freeParameters(), parameters.contents))
+    )
+    # note, you'll need two np.sums when >1 dataset
+    cost = np.sum(np.sum((y - y_data) ** 2))
 
     # update fitness. This step is crucial and evey cost function
     # must have this line
     fitness.contents.value = cost
 
 
+def plot(objective_val: List[float], y_sim: np.ndarray, sel: List[str]) -> None:
+    colours = ['c', 'm', 'y', 'k']
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    print(type(objective_val), type(y_sim), type(sel))
+    for i in range(len(sel)):
+        name = sel[i]
+        axes[0].plot(x_data, y_sim[:, i], label=f"{name}_sim", ls="--", color=colours[i])
+        axes[0].plot(x_data, y_data[:, i], label=f"{name}_exp", ls="None", marker='.', color=colours[i])
+    axes[0].legend(loc=(-0.7, 0.1))
+    axes[0].set_ylabel("AU")
+    axes[0].set_xlabel("Time step")
+    axes[0].set_title("Best fits")
 
-sres = SRES(
-    cost_function=cost_fun,
-    ngen=200,
-    lb=[0.01]*2,
-    ub=[10]*2,
-    parent_popsize=100,
-    child_popsize=100,
-)
-sres.fit()
-#
-# guess = [0.2, 0.3]  # initial guess for params
-# p, cov, infodict, mesg, ier = optimize.leastsq(f_resid, guess, full_output=True)
-# r.resetAll()
-# print("Parameter values are ", p, "Diff = ", p[0] - r.k1, p[1] - r.k2)
-# print(mesg)
-# print(cov)
-# r.reset()
-# for i in range(0, nParameters):
-#     r.model[toFit[i]] = p[i]
-# m = r.simulate(0, 20, 100, ['time', 'S1', 'S2', 'S3'])
-# plt.plot(x_data, y_data, 'sr')
-# plt.plot(m[:, 0], m[:, 1], '-b')
-# plt.plot(m[:, 0], m[:, 2], '-b')
-# plt.plot(m[:, 0], m[:, 3], '-b')
-# plt.xlabel('Time', {"fontsize": 16})
-# plt.ylabel("Concentration, S2", {"fontsize": 16})
-# plt.legend(('data', 'fit'), loc=0)
-# plt.show()
+    axes[1].plot(range(len(objective_val)), np.log10(objective_val), ls='-', marker='o')
+    axes[1].set_ylabel("log10 RSS")
+    axes[1].set_xlabel("Generation")
+    axes[1].set_title("Trace")
+    sns.despine(ax=axes[0], top=True, right=True)
+    sns.despine(ax=axes[1], top=True, right=True)
+    plt.savefig(os.path.join(os.path.dirname(__file__)), bbox_inches='tight', dpi=200)
+
+
+def do_estimation(ngen: int = 50) -> Tuple[List[float], np.ndarray, np.ndarray, List[str], Dict[str, float]]:
+    sres = SRES(
+        cost_function=cost_fun,
+        ngen=ngen,
+        lb=[0.01] * len(r.freeParameters()),
+        ub=[100] * len(r.freeParameters()),
+        parent_popsize=50,
+        child_popsize=100,
+        # retry=100,
+        gamma=0.5
+    )
+
+    objective_val: List[float] = []
+    for i in range(50):
+        objective_val.append(
+            sres.step(0.45, False)
+        )
+
+    best = dict(
+        zip(r.freeParameters(), sres.getBestParameters())
+    )
+    x_sim, y_sim, sel = get_data(**best)
+    return objective_val, x_sim, y_sim, sel, best
+
+
+def plot_waterfall(best_values: List[float], stdevs: List[float]):
+    best_values = sorted(best_values)
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    axes[0].plot(range(len(best_values)), best_values, marker='.', ls="None")
+    axes[0].set_ylabel("RSS")
+    axes[0].set_xlabel("Ranked best values")
+    axes[0].set_title("Waterfall plot (n={})".format(len(best_values)))
+    sns.despine(ax=axes[0], top=True, right=True)
+
+    axes[1].plot(range(len(stdevs)), stdevs)
+    axes[1].set_ylabel("stdev")
+    axes[1].set_xlabel("Successive iterations")
+    axes[1].set_title(f"Stdev of best RSS\n(n={len(stdevs)})")
+    sns.despine(ax=axes[1], top=True, right=True)
+
+    plt.savefig(os.path.join(
+        os.path.dirname(__file__), "waterfall.png"), bbox_inches="tight", dpi=200
+    )
+
+
+def repeated_estimation(ngen: int = 50, n: int = 10):
+    # do the first outside the loop to initialize the values
+    objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation()
+    best_values: List[float] = [objective_values_for_this_run[-1]]  # list to store the best values for each PE run
+    best_objective_val = objective_values_for_this_run[-1]  # the best value from best_values
+    best_y_sim = y_sim  # the best simulation data from the idx of best value
+    std_devs = []  # For collecting running stdev
+
+    for i in range(n - 1):
+        # run an estimation
+        objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=ngen)
+        best_values.append(objective_values_for_this_run[-1])
+        # if the best value for the current run is better than all previous runs
+        # we update the best* variables
+        if objective_values_for_this_run[-1] <= min(best_values):
+            best_objective_val = objective_values_for_this_run
+            best_y_sim = y_sim
+        current_stdev = np.std(best_values)
+        std_devs.append(current_stdev)
+        print("run:", i,
+              ", best objective function value: ", objective_values_for_this_run[-1],
+              ", current stdev of best values so far:", current_stdev,
+              ", estimated parameter values: ", best_parameters
+              )
+    plot_waterfall(best_values, std_devs)
+    plot(best_values, best_y_sim, sel)
+
+
+def identifiability(best_estimated_parameters: Dict[str, float], num_points: int = 10):
+    # we reload roadrunner here to prevent potential unintended consequences of modifying r inplace
+    r = te.loada(ANTIMONY_STRING)
+
+    # We make a copy of the original free parameters here
+    # since we'll need to modify which parameters are estimated later
+    # and put the original values back before each parameter
+    original_free_parameters = r.freeParameters()
+
+    # somewhere to store the results
+    results = dict()
+
+    for parameter in r.freeParameters():
+        # get best estimated value for parameter
+        if parameter not in best_estimated_parameters.keys():
+            raise ValueError(f"Parameter {parameter} not in best estimated parameters: {best_estimated_parameters}")
+
+        # somewhere to store the results
+        results[parameter] = dict()
+
+        # reset our model back to the best parameter set
+        for k, v in best_estimated_parameters.items():
+            setattr(r, k, v)
+
+        # we can use the interface from above but we need to update the
+        # freeParameters method to contain only 'parameter'. In profile
+        # likelihood, many parameter estimations are conducted, staring
+        # from the best estimated parameter set. The difference is that
+        # we fix 1 parameter (say k1) to a calculated value and reoptimize
+        # all the others. Then we repeat, but with a different value of k1.
+
+        def freeParameters(self):
+            return [p for p in original_free_parameters if p != parameter]
+
+        # tell roadrunner which parameters to estimate during reoptimization
+        r.freeParameters = freeParameters
+
+        # calculate the boundaries of the proile likelihood in logspace
+        best_estimated_value = best_estimated_parameters[parameter]
+        lb = best_estimated_value / 1000
+        ub = best_estimated_value * 1000
+
+        # these are the values that we will set fix parameter to
+        x = np.logspace(np.log10(lb), np.log10(ub), num_points)
+
+        for fixed_parameter_value in x:
+            # 1) set the fixed parameter value
+            setattr(r, parameter, fixed_parameter_value)
+            # 2) repeat the parameter estimation.
+            objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=50)
+            results[parameter] = dict(
+                x=fixed_parameter_value,
+                best_parameters=best_parameters,
+                best_rss=objective_values_for_this_run[-1]
+            )
+    print(results)
+    return results
+
+
+def plot_identifiability(identifiability_results, ncol=2):
+
+    pass
+
+
+if __name__ == '__main__':
+    # sns.set_context("talk")
+
+    # number of generations for a single parameter estimation
+    NGEN = 50
+    # number of parameter estimations
+    N = 50
+    DO_SINGLE_ESTIMATION = False
+    DO_MULTIPLE_ESTIMATIONS = False
+    DO_IDENTIFIABILITY = True
+
+    if DO_SINGLE_ESTIMATION:
+        best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN)
+        plot(best, y_sim, sel)
+
+    if DO_MULTIPLE_ESTIMATIONS:
+        repeated_estimation(ngen=NGEN, n=N)
+
+    if DO_IDENTIFIABILITY:
+        best_estimated_parameters = {'k1': 0.15, 'k2': 0.445, 'k3': 0.0500}
+        # results = identifiability(best_estimated_parameters, 10)
+
+        id_results = {
+            'k2': {'x': 444.99999999999994,
+                   'best_parameters': {
+                       'k2': 0.4499305586318208, 'k3': 0.05005316477132371
+                   },
+                   'best_rss': 0.006456954732571823},
+            'k3': {'x': 49.99999999999999,
+                   'best_parameters': {
+                       'k2': 0.44965010580175174, 'k3': 0.05002258268703168
+                   },
+                   'best_rss': 0.0064568586292931265}}
+        plot_identifiability(id_results)
