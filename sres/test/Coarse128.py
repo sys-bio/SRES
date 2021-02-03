@@ -136,29 +136,13 @@ sres = SRES(
     parent_popsize=400,
     child_popsize=400,
     gamma=0.85,
-    alpha=0.2,
-    pf=0.85,
+    alpha=0.1,
+    pf=0.45,
     varphi=0.1,
     seed=0,
 )
 pf = 1
 for i in range(100):
-    sres.step(pf)
-    pf*=0.99
+    f = sres.step(0.45, True)
+    print (f)
 
-"""
-
-TRoubleshooting
----------------
-There are quite a lot of hyperparameters in this algorithm and I don't know how to use them (maybe Herbert can help). 
-My guess is that these could be tuned (might be interesting to use scikit-learn?
-
-We can see that the variance in the population tends to the same value across the board
-
-
-
-
-
-
-
-"""

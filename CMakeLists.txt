@@ -46,6 +46,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 #else ()
 #    message(STATUS "Sanitizers not found")
 #endif ()
+
 # setup some paths that will be used for the INSTALL_RPATH paths on systems that
 # support it. Adapt the "ORIGIN" to the APPLE use case
 if (APPLE)
@@ -110,6 +111,7 @@ if (COPY_BINARY_TO_PYTHON_DIR)
 endif ()
 
 find_package(Python)
+
 # configure the python setup.py
 configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in"
@@ -127,7 +129,6 @@ install(
 install(
         FILES
         sres/__init__.py
-        sres/sres_capi.py
         sres/sres.py
         $<TARGET_FILE:SRES>
         DESTINATION

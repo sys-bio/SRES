@@ -32,7 +32,7 @@ void freeData(double *data) {
     free(data);
 }
 
-double *EXP_DATA = generateData(10, 0.1);
+double *EXP_DATA = generateData(10, 0.2);
 
 void simple_cost(double *input_params, double *output_fitness, double *constraints) {
     double *data = generateData(input_params[0], input_params[1]);
@@ -73,20 +73,21 @@ int main() {
 //    printf("Output is still : %f\n", output);
 
 
-    unsigned int seed = 1;
-    int es = 1;
-    int constraint = 0;
+    unsigned int seed = 0;
+    int es = 0;
+    int constraint = 2;
     int dim = 2;
     double gamma = 0.85;
     double alpha = 0.2;
     int varphi = 1;
-    int retry = 10;
+    int retry = 100;
     double pf = 0.45;
-    int parent_pop = 30; // miu
-    int child_pop = 30; // lambda
-    int ngen = 50;
-    double ub[2] = {10.0, 10.0};
-    double lb[2] = {0.1, 0.1};
+    // eslambda  = lambda + miu
+    int parent_pop = 60; // miu
+    int child_pop = 60; // lambda
+    int ngen = 100;
+    double ub[2] = {100.0, 10.0};
+    double lb[2] = {0.01, 0.1};
     ESParameter **param = makeESParameter();
     ESPopulation **population = makeESPopulation();
     ESStatistics **stats = makeESStatistics();
@@ -120,9 +121,16 @@ int main() {
                 population,
                 param,
                 stats,
-                pf
+                pf,
+                true
         );
         nbCostCalls++;
+    }
+
+    double* op = ESGetBestParameters(stats);
+    printf("best parameters: \t");
+    for(int i=0; i<dim; i++){
+        printf("%f\t", op[i]);
     }
 
     ESDeInitial(param, population, stats);

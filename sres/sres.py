@@ -1,7 +1,48 @@
-from .sres_capi import _SRESLoader
 from abc import ABC, abstractmethod
 from typing import List
 import ctypes as ct
+import os, sys
+
+
+class _SRESLoader:
+
+    def __init__(self):
+        self._lib = self._load_lib()
+
+    def _get_shared_library_extension(self):
+        if sys.platform == "linux":
+            return ".so"
+        elif sys.platform == "win32":
+            return ".dll"
+        elif sys.platform == "darwin":
+            return ".dylib"
+
+    def _get_shared_library_prefix(self):
+        if sys.platform == "linux":
+            return "lib"
+        elif sys.platform == "win32":
+            return ""
+        elif sys.platform == "darwin":
+            return "lib"
+
+    def _load_lib(self):
+        """Load the SRES C API binary"""
+        this_directory = os.path.join(os.path.dirname(__file__))
+
+        shared_lib = os.path.join(
+            this_directory,
+            f"{self._get_shared_library_prefix()}SRES{self._get_shared_library_extension()}"
+        )
+
+        lib = ct.CDLL(shared_lib)
+        return lib
+
+    def _load_func(self, funcname: str, argtypes: List, return_type) -> ct.CDLL._FuncPtr:
+        """Load a single function from SRES shared library"""
+        func = self._lib.__getattr__(funcname)
+        func.restype = return_type
+        func.argtypes = argtypes
+        return func
 
 
 class SRES:
@@ -76,12 +117,12 @@ class SRES:
         self._freeTransformFun(self._trsfm)
         self._ESDeInitial(self._param_ptr, self._pop_ptr, self._stat_ptr)
 
-    def fit(self):
+    def fit(self, printStats: bool = False):
         for i in range(self.ngen.value):
-            self.step(self.pf)
+            self.step(self.pf, printStats)
 
-    def step(self, pf: float) -> None:
-        self._ESStep(self._pop_ptr, self._param_ptr, self._stat_ptr, self.pf)
+    def step(self, pf: float, printStats=False) -> None:
+        return self._ESStep(self._pop_ptr, self._param_ptr, self._stat_ptr, pf, printStats)
 
     def _makeDoubleArrayPtr(self, input: List[float]):
         """returns a ctypes double array from input"""
@@ -183,6 +224,18 @@ class SRES:
             ],
             return_type=None)
 
+    def getBestParameters(self) :
+        _ESGetBestParameters = self._sres._load_func(
+            funcname="ESGetBestParameters",
+            argtypes=[
+                ct.c_int64  # ESStatistics**
+            ],
+            return_type=ct.POINTER(ct.c_double * self.dim.value)
+        )
+        dbl_array = _ESGetBestParameters(self._stat_ptr)
+        return [x for x in dbl_array.contents]
+
+
     """/**
      * @brief Create a ESPopulation 
      * @details heap allocated. User free's with freeESPopulation
@@ -223,7 +276,7 @@ class SRES:
      ** this generation -> print statistics information                 **
      *********************************************************************/
     """
-    # void ESStep(ESPopulation *, ESParameter *, ESStatistics *, double);
+    # void ESStep(ESPopulation *, ESParameter *, ESStatistics *, double, bool);
     _ESStep = _sres._load_func(
         funcname="ESStep",
         argtypes=[
@@ -231,6 +284,8 @@ class SRES:
             ct.c_int64,  # ESParameter  *,
             ct.c_int64,  # ESStatistics *,
             ct.c_double,  # double
+            ct.c_bool,  # print stats
         ],
-        return_type=None)
+        return_type=ct.c_double)
+
 

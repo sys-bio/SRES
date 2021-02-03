@@ -154,7 +154,7 @@ void freeESParameter(ESParameter **parameter);
  ** sp[dim]: strategy parameters                                    **
  ** f: fitness                                                      **
  ** g[constraint]: constraint value                                 **
- ** phi: phi = sum( max_(0,g)^2 )                                    **
+ ** phi: phi = sum( max(0,g)^2 )                                    **
  *********************************************************************/
 typedef struct {
     double *op;
@@ -403,9 +403,13 @@ void ESPrintStat(ESStatistics *, ESParameter *);
  ** -> Mutate (recalculate f/g/phi) -> do statistics analysis on    **
  ** this generation -> print statistics information                 **
  *********************************************************************/
-void ESStep(ESPopulation **, ESParameter **, ESStatistics **, double);
+double ESStep(ESPopulation **, ESParameter **, ESStatistics **, double, bool printStats = false);
 
-void ESStepThatTakesDoublePointers(ESPopulation **population, ESParameter **param, ESStatistics **stats, double pf);
+/**
+ * return the parameters of the best individual
+ */
+double* ESGetBestParameters(ESStatistics ** stats);
+
 /*********************************************************************
  ** sort population based on Index by ESSRSort                      **
  ** ESSortPopulation(population, param)                             **
