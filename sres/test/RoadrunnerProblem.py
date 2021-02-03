@@ -153,11 +153,10 @@ def do_estimation(ngen: int = 50) -> Tuple[List[float], np.ndarray, np.ndarray, 
     sres = SRES(
         cost_function=cost_fun,
         ngen=ngen,
-        lb=[0.01] * len(r.freeParameters()),
+        lb=[0.001] * len(r.freeParameters()),
         ub=[100] * len(r.freeParameters()),
         parent_popsize=50,
         child_popsize=100,
-        # retry=100,
         gamma=0.5
     )
 
@@ -221,71 +220,6 @@ def repeated_estimation(ngen: int = 50, n: int = 10):
     plot_waterfall(best_values, std_devs)
     plot(best_values, best_y_sim, sel)
 
-
-def identifiability(best_estimated_parameters: Dict[str, float], num_points: int = 10):
-    # we reload roadrunner here to prevent potential unintended consequences of modifying r inplace
-    r = te.loada(ANTIMONY_STRING)
-
-    # We make a copy of the original free parameters here
-    # since we'll need to modify which parameters are estimated later
-    # and put the original values back before each parameter
-    original_free_parameters = r.freeParameters()
-
-    # somewhere to store the results
-    results = dict()
-
-    for parameter in r.freeParameters():
-        # get best estimated value for parameter
-        if parameter not in best_estimated_parameters.keys():
-            raise ValueError(f"Parameter {parameter} not in best estimated parameters: {best_estimated_parameters}")
-
-        # somewhere to store the results
-        results[parameter] = dict()
-
-        # reset our model back to the best parameter set
-        for k, v in best_estimated_parameters.items():
-            setattr(r, k, v)
-
-        # we can use the interface from above but we need to update the
-        # freeParameters method to contain only 'parameter'. In profile
-        # likelihood, many parameter estimations are conducted, staring
-        # from the best estimated parameter set. The difference is that
-        # we fix 1 parameter (say k1) to a calculated value and reoptimize
-        # all the others. Then we repeat, but with a different value of k1.
-
-        def freeParameters(self):
-            return [p for p in original_free_parameters if p != parameter]
-
-        # tell roadrunner which parameters to estimate during reoptimization
-        r.freeParameters = freeParameters
-
-        # calculate the boundaries of the proile likelihood in logspace
-        best_estimated_value = best_estimated_parameters[parameter]
-        lb = best_estimated_value / 1000
-        ub = best_estimated_value * 1000
-
-        # these are the values that we will set fix parameter to
-        x = np.logspace(np.log10(lb), np.log10(ub), num_points)
-
-        for fixed_parameter_value in x:
-            # 1) set the fixed parameter value
-            setattr(r, parameter, fixed_parameter_value)
-            # 2) repeat the parameter estimation.
-            objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=50)
-            results[parameter] = dict(
-                x=fixed_parameter_value,
-                best_parameters=best_parameters,
-                best_rss=objective_values_for_this_run[-1]
-            )
-    print(results)
-    return results
-
-
-def plot_identifiability(identifiability_results, ncol=2):
-
-    pass
-
-
 if __name__ == '__main__':
     # sns.set_context("talk")
 
@@ -294,8 +228,7 @@ if __name__ == '__main__':
     # number of parameter estimations
     N = 50
     DO_SINGLE_ESTIMATION = False
-    DO_MULTIPLE_ESTIMATIONS = False
-    DO_IDENTIFIABILITY = True
+    DO_MULTIPLE_ESTIMATIONS = True
 
     if DO_SINGLE_ESTIMATION:
         best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN)
@@ -304,19 +237,3 @@ if __name__ == '__main__':
     if DO_MULTIPLE_ESTIMATIONS:
         repeated_estimation(ngen=NGEN, n=N)
 
-    if DO_IDENTIFIABILITY:
-        best_estimated_parameters = {'k1': 0.15, 'k2': 0.445, 'k3': 0.0500}
-        # results = identifiability(best_estimated_parameters, 10)
-
-        id_results = {
-            'k2': {'x': 444.99999999999994,
-                   'best_parameters': {
-                       'k2': 0.4499305586318208, 'k3': 0.05005316477132371
-                   },
-                   'best_rss': 0.006456954732571823},
-            'k3': {'x': 49.99999999999999,
-                   'best_parameters': {
-                       'k2': 0.44965010580175174, 'k3': 0.05002258268703168
-                   },
-                   'best_rss': 0.0064568586292931265}}
-        plot_identifiability(id_results)
