@@ -259,20 +259,12 @@ void freeESStatistics(ESStatistics **statistics);
  ** ESDeInitial(param,populationi,stats)                            **
  ** free param and population                                       **
  *********************************************************************/
-void ESInitial(unsigned int, ESParameter **, ESfcnTrsfm *, \
-               ESfcnFG, int, int, int, double *, double *, int, int, int, \
-               double, double, double, int, \
-               ESPopulation **, ESStatistics **);
-
-/**
- * @brief (CW) same as ESInitial but the parameter ESfcnFC is instead
- * passed in as a pointer. This should help us with port to python
- */
-void ESInitialWithPtrFitnessFcn(unsigned int seed, ESParameter **param, ESfcnTrsfm *trsfm, \
-               ESfcnFG *fg, int es, int constraint, int dim, double *ub, \
-               double *lb, int miu, int lambda, int gen, \
+void ESInitial(unsigned int seed, ESParameter ** param, ESfcnTrsfm * trsfm, \
+               ESfcnFG fg, int es, int constraint, int dim, double * ub,
+               double * lb, int miu, int lambda, int gen, \
                double gamma, double alpha, double varphi, int retry, \
                ESPopulation **population, ESStatistics **stats);
+
 
 void ESDeInitial(ESParameter **param, ESPopulation **population, ESStatistics **stats);
 
@@ -282,7 +274,7 @@ void ESDeInitial(ESParameter **param, ESPopulation **population, ESStatistics **
  **                dim,ub,lb,miu,lambda,gen)                        **
  ** param: point to parameter                                       **
  ** fg: functions of fitness and constraints                        **
- ** trsfm: to doNothingTransform sp/op                                       **
+ ** trsfm: to doNothingTransform sp/op                              **
  ** es: ES process, esDefESPlus/esDefESSlash                        **
  ** seed: reserve seed for next use                                 **
  ** constraint: number of constraints                               **
@@ -306,10 +298,10 @@ void ESDeInitial(ESParameter **param, ESPopulation **population, ESStatistics **
  ** ESDeInitialParam(param)                                         **
  ** free param                                                      **
  *********************************************************************/
-void ESInitialParam(ESParameter **, ESfcnTrsfm *, ESfcnFG, int, \
-                    unsigned int, \
-                    int, int, double *, double *, int, int, int, \
-                    double, double, double, int);
+void ESInitialParam(ESParameter ** param, ESfcnTrsfm * trsfm, ESfcnFG fg, int es, \
+                    int seed, int constraint, int dim, double * ub, double * lb,
+                    int miu, int lambda, int gen, double gamma,
+                    double alpha, double varphi, int retry);
 
 void ESDeInitialParam(ESParameter **param);
 

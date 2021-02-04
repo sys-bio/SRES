@@ -19,6 +19,24 @@ target_include_directories(${test_target} PRIVATE
         )
 add_dependencies(EstimateMuAndSigmaModified SRES-static)
 
+set(test_target AckleyFunction)
+add_executable(${test_target} AckleyFunction.cpp)
+target_link_libraries(${test_target} PRIVATE SRES-static)
+target_include_directories(${test_target} PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${PARENT_DIR}>"
+        )
+add_dependencies(AckleyFunction SRES-static)
+
+set(test_target BealeFunction)
+add_executable(${test_target} BealeFunction.cpp)
+target_link_libraries(${test_target} PRIVATE SRES-static)
+target_include_directories(${test_target} PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${PARENT_DIR}>"
+        )
+add_dependencies(BealeFunction SRES-static)
+
 set(test_target SresTest)
 add_executable(${test_target} test.cpp)
 target_link_libraries(${test_target} PRIVATE gtest gtest_main SRES-static)

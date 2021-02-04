@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
+#include <chrono>
 
 // (cw) replace include unistd with linux2win_unistd for port to windows
 #include "linux2win/linux2win_unistd.h"
@@ -80,10 +81,6 @@ void ShareRandVec(double *s, int n, double min, double max) {
  ** outseed is to be used in the next step                          **
  *********************************************************************/
 void ShareSeed(unsigned int inseed, unsigned int *outseed) {
-    // (CW) change pid_t to int since on gcc its a typedef'd int
-    // but not defined on windows
-
-    // pid_t thispid; // commented out by cw
     int thispid;
     time_t nowtime;
 
@@ -96,7 +93,7 @@ void ShareSeed(unsigned int inseed, unsigned int *outseed) {
         return;
     }
 
-    thispid = getpid();
+    thispid = _getpid();
     time(&nowtime);
     inseed = thispid * nowtime;
     srand(inseed);

@@ -1,4 +1,5 @@
 #pragma clang diagnostic push
+#pragma clang diagnostic push
 #pragma ide diagnostic ignored "modernize-use-nullptrptr"
 /*********************************************************************
  ** Stochastic Ranking Evolution Strategy                           **
@@ -190,11 +191,12 @@ void ESDeInitial(ESParameter **param, ESPopulation **population, \
  ** free param                                                      **
  *********************************************************************/
 void ESInitialParam(ESParameter **param, ESfcnTrsfm *trsfm, \
-                    ESfcnFG fg, int es, unsigned int seed, \
+                    ESfcnFG fg, int es, int seed, \
                     int constraint, int dim, double *ub, double *lb, \
                     int miu, int lambda, int gen, \
                     double gamma, double alpha, \
                     double varphi, int retry) {
+
     int i;
 
     (*param) = (ESParameter *) ShareMallocM1c(sizeof(ESParameter));
@@ -357,6 +359,7 @@ void ESInitialIndividual(ESIndividual **indvdl, ESParameter *param) {
     }
 
     fg((*indvdl)->op, &((*indvdl)->f), (*indvdl)->g);
+//    printf("From C: calculated initial fitness is: %f\n", (*indvdl)->f);
     (*indvdl)->phi = 0.0;
     for (i = 0; i < constraint; i++) {
         if ((*indvdl)->g[i] > 0.0)
@@ -587,7 +590,7 @@ double ESStep(ESPopulation **population, ESParameter **param, \
 /*
  * must be called after ESStep
  */
-double* ESGetBestParameters(ESStatistics ** stats){
+double *ESGetBestParameters(ESStatistics **stats) {
     return (*stats)->bestindvdl->op;
 }
 
@@ -782,6 +785,8 @@ void ESMutate(ESPopulation *population, ESParameter *param) {
     for (i = 0; i < lambda; i++) {
         individual = population->member[i];
         fg(individual->op, &(individual->f), individual->g);
+//        printf("From C: calculated fitness for individual %d is: %f\n", i, individual->f);
+
 
         individual->phi = 0.0;
         for (j = 0; j < constraint; j++) {

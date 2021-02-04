@@ -220,6 +220,7 @@ def repeated_estimation(ngen: int = 50, n: int = 10):
     plot_waterfall(best_values, std_devs)
     plot(best_values, best_y_sim, sel)
 
+
 if __name__ == '__main__':
     # sns.set_context("talk")
 
@@ -228,7 +229,7 @@ if __name__ == '__main__':
     # number of parameter estimations
     N = 50
     DO_SINGLE_ESTIMATION = False
-    DO_MULTIPLE_ESTIMATIONS = True
+    DO_MULTIPLE_ESTIMATIONS = False
 
     if DO_SINGLE_ESTIMATION:
         best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN)
@@ -237,3 +238,14 @@ if __name__ == '__main__':
     if DO_MULTIPLE_ESTIMATIONS:
         repeated_estimation(ngen=NGEN, n=N)
 
+
+    def linear():
+        x = []
+        for i in range(10):
+            for j in range(10):
+                v = i*10 + j
+                x.append(v)
+        return x
+
+
+    assert linear() == list(range(10)), linear()

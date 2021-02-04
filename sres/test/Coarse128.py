@@ -128,21 +128,37 @@ def cost_fun(parameters, fitness, constraints):
     fitness.contents.value = cost
 
 
-sres = SRES(
-    cost_function=cost_fun,
-    ngen=1000,
-    lb=[0.1] * 43,
-    ub=[10] * 43,
-    parent_popsize=400,
-    child_popsize=400,
-    gamma=0.85,
-    alpha=0.1,
-    pf=0.45,
-    varphi=0.1,
-    seed=0,
-)
-pf = 1
-for i in range(100):
-    f = sres.step(0.45, True)
-    print (f)
+if __name__ == "__main__":
+
+    ngen = 1000
+    popsize = 150
+
+    sres = SRES(
+        cost_function=cost_fun,
+        ngen=ngen,
+        lb=[0.1] * 43,
+        ub=[10] * 43,
+        parent_popsize=popsize,
+        child_popsize=popsize*7,
+        gamma=0.85,
+        alpha=0.2,
+        es=0,
+        varphi=1,
+        retry=10,
+        pf=0.475
+    )
+
+    sres.fit(True)
+
+
+# pf = 1
+# for i in range(100):
+#     f = sres.step(0.45, True)
+#     print (f)
+
+
+
+
+
+
 

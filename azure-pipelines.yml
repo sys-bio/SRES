@@ -364,10 +364,10 @@ stages:
             echo "> cd python"
             cd python
         - script: |
-            export LD_LIBRARY_PATH=$(PythonLibDir)
             cd $(Pipeline.Workspace)/SRES-ManyLinux
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
+            export LD_LIBRARY_PATH=$(PythonLibDir)
             $(PythonExecutable) -c "import sres"
         - task: CopyFiles@2
           inputs:
