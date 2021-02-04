@@ -141,8 +141,15 @@ sres = SRES(
     varphi=0.1,
     seed=0,
 )
-pf = 1
-for i in range(100):
-    f = sres.step(0.45, True)
-    print (f)
+# pf = 1
+# for i in range(100):
+#     f = sres.step(0.45, True)
+#     print (f)
+
+print(r.getSBML())
+
+
+
+
+
 
