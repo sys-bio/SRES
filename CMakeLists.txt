@@ -101,6 +101,7 @@ configure_file(
 
 add_subdirectory(external)
 
+add_subdirectory(csres)
 add_subdirectory(sres)
 
 

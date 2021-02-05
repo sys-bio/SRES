@@ -444,6 +444,9 @@ void ESSelectPopulation(ESPopulation *, ESParameter *);
  *********************************************************************/
 void ESMutate(ESPopulation *, ESParameter *);
 
+
+void ESMutate2  (ESPopulation *, ESParameter *);
+
 #endif
 
 #ifdef __cplusplus

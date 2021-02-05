@@ -70,7 +70,7 @@ int main() {
     alpha = Alpha;
     varphi = Varphi;
     retry = Retry;
-    pf = pf;
+    pf = pf = 0.475;
     es = ESPlus;
 
     constraint = 0;
