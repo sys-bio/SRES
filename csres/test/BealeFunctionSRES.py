@@ -17,13 +17,17 @@ def cost_fun(parameters):
 
 if __name__ == "__main__":
     ngen = 25
-    popsize = 200
+    popsize = 4
     seed = 0
 
     cb = SRES.callback(2)(cost_fun)
 
     sres = SRES(
-        cb, 10, 50, [8.324, 7.335], [0.1, 0.1], [10, 10], 7
+        cb, popsize=popsize, numGenerations=ngen,
+        startingValues=[8.324, 7.335],
+        lb=[0.1, 0.1],
+        ub=[10, 10],
+        childrate=7
     )
 
     print(sres.fit())

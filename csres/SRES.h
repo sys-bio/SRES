@@ -34,6 +34,8 @@ namespace csres {
 
         bool fit();
 
+        std::vector<double> getTrace();
+
         bool swap(size_t from, size_t to);
 
         bool replicate();
@@ -90,11 +92,14 @@ namespace csres {
         DoubleMatrix variance_;
         DoubleVector maxVariance_;
 
-        /**
-         * @brief storage of the fitness value
-         */
         DoubleVector values_;
         DoubleVector phi_;
+
+        /**
+         * Collect the best values over generations
+         */
+        DoubleVector hallOfFame_;
+
         int populationSize_ = 100;
         int numGenerations_ = 500;
 

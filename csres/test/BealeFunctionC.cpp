@@ -40,4 +40,11 @@ int main() {
         std::cout << i << "\t" ;
     }
     std::cout << std::endl;
+
+    double* trace = getTrace(sres, sres->getNumGenerations());
+
+    for (int i=0; i< sres->getNumGenerations(); i++){
+        std::cout << trace[i] << std::endl;
+
+    }
 }

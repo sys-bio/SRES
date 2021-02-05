@@ -5,6 +5,7 @@
 #include "CSRES.h"
 
 #include <cstring>
+#include <iostream>
 
 namespace csres {
 
@@ -73,6 +74,17 @@ namespace csres {
     void setSeed(SRES *sres, unsigned long long seed) {
         sres->setSeed(seed);
     }
+
+    double *getTrace(SRES *sres, int sizeOfTrace) {
+        auto *bval = (double *) malloc(sizeof(double) * sizeOfTrace);
+        std::vector<double> v = sres->getTrace();
+        for (int i=0; i<sizeOfTrace; i++){
+            *bval = v[i];
+        }
+        return bval;
+    }
+
+    // getVariance
 }
 
 

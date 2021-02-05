@@ -592,6 +592,7 @@ namespace csres {
         if (BestIndex != std::numeric_limits<size_t>::max()) {
             // and store that value
             bestValue_ = values_[BestIndex];
+            hallOfFame_.push_back(bestValue_);
             solutionValues_ = individuals_[BestIndex];
 
             // todo will need something to replace this
@@ -646,9 +647,6 @@ namespace csres {
         //if (mpCallBack)
         //    mpCallBack->finishItem(mhGenerations);
 
-//        auto x = getSolutionValues();
-//        for (auto i : x){
-//            std::cout << "i is : " << i << std::endl;
 //        }
 
         return true;
@@ -672,6 +670,10 @@ namespace csres {
 
     void SRES::setSeed(unsigned long long int seed) {
         RandomNumberGenerator::getInstance().setSeed(seed);
+    }
+
+    std::vector<double> SRES::getTrace() {
+        return hallOfFame_;
     }
 
 

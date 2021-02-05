@@ -39,6 +39,7 @@ namespace csres {
 
     void setSeed(SRES* sres, unsigned long long seed);
 
+    double *getTrace(SRES *sres, int sizeOfTrace);
 
     }
 

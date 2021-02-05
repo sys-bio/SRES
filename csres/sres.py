@@ -66,6 +66,8 @@ class SRES:
 
         self.getSolutionValues = self._loadGetSolutionValues()
 
+        self.getTrace = self._loadGetTrace()
+
         # then call it, assigning the output pointer to this obj.
         # this SRES owns this pointer
         self._obj = self.newSRES(
@@ -100,9 +102,15 @@ class SRES:
         return self._sres._load_func(
             funcname="getSolutionValues",
             argtypes=[ct.c_int64],
-            return_type=ct.POINTER(ct.c_double*self._numEstimatedParameters.value)
+            return_type=ct.POINTER(ct.c_double * self._numEstimatedParameters.value)
         )
 
+    def _loadGetTrace(self):
+        return self._sres._load_func(
+            funcname="getTrace",
+            argtypes=[ct.c_int64, ct.c_int32],
+            return_type=ct.POINTER(ct.c_double*self._numGenerations.value)
+        )
 
     _getLastError = _sres._load_func(
         funcname="getLastError",
@@ -131,11 +139,16 @@ class SRES:
 
     def fit(self):
         self._fit(self._obj)
+
+        print([i for i in self.getTrace(self._obj, self._numGenerations).contents])
+
         dct = dict(
             best_cost=self.getBestValue().contents.value,
+            trace=[i for i in self.getTrace(self._obj, self._numGenerations).contents],
             best_solution=[i for i in self.getSolutionValues(self._obj).contents]
         )
         return dct
+
 
     _freeSolutionValues = _sres._load_func(
         funcname="freeSolutionValues",
@@ -160,6 +173,8 @@ class SRES:
         argtypes=[ct.c_int64],
         return_type=None
     )
+
+
 
     # def __del__(self):
     #     self._deleteSRES(self._obj)
