@@ -23,7 +23,7 @@ def freeParameters(self):
     to the tellurium interface to roadrunner to return the names
     of the parameters we want to fit
     """
-    return ["k2", "k3"]
+    return ["k1", "k2", "k3"]
 
 
 # assign, and now freeParameters is callable bound to ExtendedRoadrunner types
@@ -68,7 +68,7 @@ for i in range(0, len(y_data)):
 #   Configure the optimization
 #
 
-@SRES.COST_FUNCTION_CALLBACK
+@SRES.callback(len(r.freeParameters()))
 def cost_fun(parameters, fitness, constraints):
     """
     Brief
@@ -149,14 +149,15 @@ def plot(objective_val: List[float], y_sim: np.ndarray, sel: List[str]) -> None:
     plt.savefig(os.path.join(os.path.dirname(__file__)), bbox_inches='tight', dpi=200)
 
 
-def do_estimation(ngen: int = 50) -> Tuple[List[float], np.ndarray, np.ndarray, List[str], Dict[str, float]]:
+def do_estimation(ngen: int = 50, popsize: int = 50) -> Tuple[
+    List[float], np.ndarray, np.ndarray, List[str], Dict[str, float]]:
     sres = SRES(
         cost_function=cost_fun,
         ngen=ngen,
         lb=[0.001] * len(r.freeParameters()),
         ub=[100] * len(r.freeParameters()),
-        parent_popsize=50,
-        child_popsize=100,
+        parent_popsize=popsize,
+        child_popsize=popsize * 7,
         gamma=0.5
     )
 
@@ -225,27 +226,19 @@ if __name__ == '__main__':
     # sns.set_context("talk")
 
     # number of generations for a single parameter estimation
-    NGEN = 50
+    NGEN = 400
+
+    POPSIZE = 100
+
     # number of parameter estimations
-    N = 50
-    DO_SINGLE_ESTIMATION = False
+    N = 150
+
+    DO_SINGLE_ESTIMATION = True
     DO_MULTIPLE_ESTIMATIONS = False
 
     if DO_SINGLE_ESTIMATION:
-        best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN)
+        best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN, popsize=POPSIZE)
         plot(best, y_sim, sel)
 
     if DO_MULTIPLE_ESTIMATIONS:
         repeated_estimation(ngen=NGEN, n=N)
-
-
-    def linear():
-        x = []
-        for i in range(10):
-            for j in range(10):
-                v = i*10 + j
-                x.append(v)
-        return x
-
-
-    assert linear() == list(range(10)), linear()

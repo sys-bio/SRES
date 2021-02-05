@@ -30,7 +30,7 @@ double cost(double* input_params) {
 int main() {
 
     SRES sres(&cost, 10, 50, {8.324, 7.335}, {0.1, 0.1}, {10, 10});
-    sres.optimise();
+    sres.fit();
 
     std::cout << "Solution best fit: " << sres.getBestValue() << "; best solution: ";
     for (auto i: sres.getSolutionValues()){

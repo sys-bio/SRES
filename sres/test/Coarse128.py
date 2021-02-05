@@ -104,7 +104,7 @@ dataValues = dataValues[:, 1:]
 #
 # print(r.simulate(0, 1000, 11, ["L", "E", "P", "R"]))
 
-@SRES.COST_FUNCTION_CALLBACK
+@SRES.callback(len(r.freeParameters()))
 def cost_fun(parameters, fitness, constraints):
     # Reset the model before
     r.reset()
@@ -113,6 +113,7 @@ def cost_fun(parameters, fitness, constraints):
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
         val = parameters.contents[i]
+        print("param: ", param, "val: ", val)
         setattr(r, param, val)
 
     # compute cost.

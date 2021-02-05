@@ -11,7 +11,7 @@ namespace csres {
     OptItems::OptItems(std::vector<OptItem> optItems)
             : optItems_(std::move(optItems)) {}
 
-    [[noreturn]] OptItems::OptItems(const std::vector<double> &startingValues, const std::vector<double> &lb,
+    OptItems::OptItems(const std::vector<double> &startingValues, const std::vector<double> &lb,
                        const std::vector<double> &ub) {
 
         std::vector<int> sizes(

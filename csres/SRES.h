@@ -30,7 +30,7 @@ namespace csres {
 
         SRES(CostFunction cost, int populationSize, int numGenerations,
              const DoubleVector &startingValues, const DoubleVector &lb,
-             const DoubleVector &ub);
+             const DoubleVector &ub, int childrate = 7);
 
         bool swap(size_t from, size_t to);
 
@@ -67,7 +67,7 @@ namespace csres {
 
         double phi(size_t indivNum);
 
-        bool optimise();
+        bool fit();
 
         [[nodiscard]] double getPf() const;
 
@@ -78,6 +78,8 @@ namespace csres {
         bool creation(size_t first);
 
         size_t fittest();
+
+        void setSeed(unsigned long long int seed);
 
     private:
 

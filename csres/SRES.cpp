@@ -13,12 +13,13 @@
 namespace csres {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
-               const DoubleVector &ub)
+               const DoubleVector &ub, int childrate)
             : cost_(cost),
               populationSize_(populationSize),
               numGenerations_(numGenerations),
               optItems_(OptItems(startingValues, lb, ub)),
-              numberOfParameters_(lb.size()) {}
+              numberOfParameters_(lb.size()),
+              childrate_(childrate) {}
 
 
     int SRES::getPopulationSize() const {
@@ -60,6 +61,7 @@ namespace csres {
     void SRES::setPf(double pf) {
         pf_ = pf;
     }
+
 
     bool SRES::swap(size_t from, size_t to) {
         DoubleVector pTmp = individuals_[to];
@@ -562,7 +564,7 @@ namespace csres {
         }
     }
 
-    bool SRES::optimise() {
+    bool SRES::fit() {
         bool Continue = true;
         size_t BestIndex = std::numeric_limits<size_t>::max();
 
@@ -661,6 +663,10 @@ namespace csres {
 
     void SRES::setBestValue(double bestValue) {
         bestValue_ = bestValue;
+    }
+
+    void SRES::setSeed(unsigned long long int seed) {
+        RandomNumberGenerator::getInstance().setSeed(seed);
     }
 
 

@@ -21,19 +21,22 @@ namespace csres {
 
     void clearLastError(const std::string &err);
 
-    SRES *createSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                     double *startingValues, const double *lb, double *ub);
+    SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
+                  double *startingValues, const double *lb, double *ub, int childrate = 7);
 
+    void deleteSRES(SRES* sres);
 
     const double *getSolutionValues(SRES* sres);
 
     double* getBestValue(SRES* sres);
 
-    bool optimise(SRES* sres);
+    bool fit(SRES* sres);
 
     void freeSolutionValues(const double *sol) ;
 
     void freeBestValue(const double *val);
+
+    void setSeed(SRES* sres, unsigned long long seed);
 
 
     }

@@ -3,6 +3,7 @@
 //
 
 #include "RandomNumberGenerator.h"
+#include <random>
 
 namespace csres {
 
@@ -50,7 +51,7 @@ namespace csres {
     }
 
     double RandomNumberGenerator::uniformInt(int lb, int ub) {
-        std::uniform_int<int> distibution(lb, ub);
+        std::uniform_int_distribution<int> distibution(lb, ub);
         return distibution(generator_);
     }
 

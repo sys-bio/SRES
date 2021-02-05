@@ -27,8 +27,8 @@ namespace csres {
         LAST_ERROR = "";
     }
 
-    SRES *createSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                     double *startingValues, const double *lb, double *ub) {
+    SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
+                  double *startingValues, const double *lb, double *ub, int childrate) {
 
         int sizeOfStartingValues = sizeof(startingValues) / sizeof(double);
         int sizeOfLb = sizeof(lb) / sizeof(double);
@@ -45,6 +45,10 @@ namespace csres {
 
         SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_);
         return sres;
+    }
+
+    void deleteSRES(SRES *sres) {
+        delete sres;
     }
 
 
@@ -64,8 +68,8 @@ namespace csres {
         return bval;
     }
 
-    bool optimise(SRES *sres) {
-        return sres->optimise();
+    bool fit(SRES *sres) {
+        return sres->fit();
     }
 
     void freeSolutionValues(const double *sol) {
@@ -74,6 +78,10 @@ namespace csres {
 
     void freeBestValue(const double *val) {
         free((void *) val);
+    }
+
+    void setSeed(SRES *sres, unsigned long long seed) {
+        sres->setSeed(seed);
     }
 }
 
