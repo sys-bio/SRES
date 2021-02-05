@@ -14,21 +14,20 @@ namespace csres {
     OptItems::OptItems(const std::vector<double> &startingValues, const std::vector<double> &lb,
                        const std::vector<double> &ub) {
 
-        std::vector<int> sizes(
-                {static_cast<int>(startingValues.size()),
-                 static_cast<int>(lb.size()),
-                 static_cast<int>(ub.size())}
-        );
+        int s1 = startingValues.size();
+        int s2 = lb.size();
+        int s3 = ub.size();
+        std::vector<int> sizes({s1, s2, s3});
         bool equal = false;
         if (std::adjacent_find(sizes.begin(), sizes.end(), std::not_equal_to<>()) == sizes.end()) {
             equal = true;
         }
-        if (!equal){
+        if (!equal) {
             LOGIC_ERROR << "Input vectors are not equal sizes. The startingValues vector is "
-                           << startingValues.size() << "; the lb vector is: " << lb.size()
-                           << "; and the ub vector is " << ub.size() << std::endl;
+                        << s1 << "; the lb vector is: " << s2
+                        << "; and the ub vector is " << s3 << std::endl;
         }
-        for (int i=0; i<startingValues.size(); i++){
+        for (int i = 0; i < startingValues.size(); i++) {
             optItems_.emplace_back(startingValues[i], lb[i], ub[i]);
         }
     }

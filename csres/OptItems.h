@@ -19,7 +19,7 @@ namespace csres {
 
         OptItems(std::initializer_list<OptItem> optItems);
 
-        [[noreturn]] OptItems(const std::vector<double>& startingValues, const std::vector<double>& lb, const std::vector<double>&ub);
+        OptItems(const std::vector<double>& startingValues, const std::vector<double>& lb, const std::vector<double>&ub);
 
         int size();
 

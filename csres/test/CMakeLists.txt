@@ -14,3 +14,27 @@ install(
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+
+set(target OptItemTests)
+add_executable(${target} TestOptItem.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
+
+
+set(target OptItemsTests)
+add_executable(${target} TestOptItems.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

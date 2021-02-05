@@ -93,7 +93,7 @@ void ShareSeed(unsigned int inseed, unsigned int *outseed) {
         return;
     }
 
-    thispid = _getpid();
+    thispid = getpid();
     time(&nowtime);
     inseed = thispid * nowtime;
     srand(inseed);

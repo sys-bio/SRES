@@ -21,7 +21,6 @@ namespace csres {
               numberOfParameters_(lb.size()),
               childrate_(childrate) {}
 
-
     int SRES::getPopulationSize() const {
         return populationSize_;
     }
@@ -210,7 +209,7 @@ namespace csres {
          */
          double* pd = individual.data();
 
-        fitnessValue_ = cost_(pd);
+        fitnessValue_ = (*cost_)(pd);
 
         return Continue;
     }

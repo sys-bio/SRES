@@ -32,6 +32,8 @@ namespace csres {
              const DoubleVector &startingValues, const DoubleVector &lb,
              const DoubleVector &ub, int childrate = 7);
 
+        bool fit();
+
         bool swap(size_t from, size_t to);
 
         bool replicate();
@@ -67,7 +69,6 @@ namespace csres {
 
         double phi(size_t indivNum);
 
-        bool fit();
 
         [[nodiscard]] double getPf() const;
 
@@ -80,6 +81,8 @@ namespace csres {
         size_t fittest();
 
         void setSeed(unsigned long long int seed);
+
+        void select();
 
     private:
 
@@ -124,7 +127,6 @@ namespace csres {
 
         int currentGeneration_ = 0;
 
-        void select();
     };
 
 }

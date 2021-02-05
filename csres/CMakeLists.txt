@@ -6,6 +6,7 @@ add_library(${target} STATIC
         OptItems
         Error
         )
+target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 add_subdirectory(test)

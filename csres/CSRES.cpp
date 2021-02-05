@@ -4,8 +4,7 @@
 
 #include "CSRES.h"
 
-#include <utility>
-
+#include <cstring>
 
 namespace csres {
 
