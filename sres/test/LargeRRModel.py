@@ -100,9 +100,6 @@ time = dataValues[:, 1]  # copy for later
 dataValues = dataValues[:, 1:]
 
 
-# print(dataValues)
-#
-# print(r.simulate(0, 1000, 11, ["L", "E", "P", "R"]))
 
 @SRES.callback(len(r.freeParameters()))
 def cost_fun(parameters, fitness, constraints):
@@ -113,7 +110,6 @@ def cost_fun(parameters, fitness, constraints):
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
         val = parameters.contents[i]
-        print("param: ", param, "val: ", val)
         setattr(r, param, val)
 
     # compute cost.

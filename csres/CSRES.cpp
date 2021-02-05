@@ -27,22 +27,13 @@ namespace csres {
     }
 
     SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                  double *startingValues, const double *lb, double *ub, int childrate) {
+                  double *startingValues, const double *lb, double *ub, int numEstimatedParameters, int childrate) {
 
-        int sizeOfStartingValues = sizeof(startingValues) / sizeof(double);
-        int sizeOfLb = sizeof(lb) / sizeof(double);
-        int sizeOfUb = sizeof(ub) / sizeof(double);
+        std::vector<double> startVals(startingValues, startingValues + numEstimatedParameters);
+        std::vector<double> lb_(lb, lb + numEstimatedParameters);
+        std::vector<double> ub_(ub, ub + numEstimatedParameters);
 
-        if ((sizeOfStartingValues != sizeOfLb) | (sizeOfStartingValues != sizeOfUb)) {
-            std::string err = "Size of input arrays are not equal";
-            setLastError(err);
-        }
-
-        std::vector<double> startVals(startingValues, startingValues + sizeOfUb);
-        std::vector<double> lb_(lb, lb + sizeOfUb);
-        std::vector<double> ub_(ub, ub + sizeOfUb);
-
-        SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_);
+        SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_, childrate);
         return sres;
     }
 

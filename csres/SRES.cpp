@@ -9,6 +9,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <iostream>
 
 namespace csres {
     SRES::SRES(CostFunction cost, int populationSize,
@@ -644,6 +645,11 @@ namespace csres {
 
         //if (mpCallBack)
         //    mpCallBack->finishItem(mhGenerations);
+
+//        auto x = getSolutionValues();
+//        for (auto i : x){
+//            std::cout << "i is : " << i << std::endl;
+//        }
 
         return true;
     }

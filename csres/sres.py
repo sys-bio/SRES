@@ -71,7 +71,7 @@ class SRES:
         self._obj = self.newSRES(
             self._cost_function, self._popsize,
             self._numGenerations, self.startingValues,
-            self.lb, self.ub
+            self.lb, self.ub, self._numEstimatedParameters, self._childrate
         )
 
     @staticmethod
@@ -84,13 +84,14 @@ class SRES:
         return self._sres._load_func(
             funcname="newSRES",
             argtypes=[
-                # SRES.callback(self._numEstimatedParameters.value),
                 SRES.callback(self._numEstimatedParameters.value),
                 ct.c_int32,
                 ct.c_int32,
                 ct.POINTER(ct.c_double * self._numEstimatedParameters.value),
                 ct.POINTER(ct.c_double * self._numEstimatedParameters.value),
                 ct.POINTER(ct.c_double * self._numEstimatedParameters.value),
+                ct.c_int32,
+                ct.c_int32
             ],
             return_type=ct.c_int64
         )
@@ -102,8 +103,6 @@ class SRES:
             return_type=ct.POINTER(ct.c_double*self._numEstimatedParameters.value)
         )
 
-    def getSolutionValues(self):
-        return self._getSolutionValues(self._obj)
 
     _getLastError = _sres._load_func(
         funcname="getLastError",

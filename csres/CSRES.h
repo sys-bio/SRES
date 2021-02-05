@@ -22,7 +22,8 @@ namespace csres {
     void clearLastError(const std::string &err);
 
     SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                  double *startingValues, const double *lb, double *ub, int childrate = 7);
+                  double *startingValues, const double *lb, double *ub,
+                  int numEstimatedParameters, int childrate = 7);
 
     void deleteSRES(SRES* sres);
 
