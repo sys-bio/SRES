@@ -64,6 +64,8 @@ class SRES:
         # load the function for creating a SRES obj
         self.newSRES = self._loadNewSRES()
 
+        self.getSolutionValues = self._loadGetSolutionValues()
+
         # then call it, assigning the output pointer to this obj.
         # this SRES owns this pointer
         self._obj = self.newSRES(
@@ -82,6 +84,7 @@ class SRES:
         return self._sres._load_func(
             funcname="newSRES",
             argtypes=[
+                # SRES.callback(self._numEstimatedParameters.value),
                 SRES.callback(self._numEstimatedParameters.value),
                 ct.c_int32,
                 ct.c_int32,
@@ -92,11 +95,12 @@ class SRES:
             return_type=ct.c_int64
         )
 
-    _getSolutionValues = _sres._load_func(
-        funcname="getSolutionValues",
-        argtypes=[ct.c_int64],
-        return_type=ct.POINTER(ct.c_double)
-    )
+    def _loadGetSolutionValues(self):
+        return self._sres._load_func(
+            funcname="getSolutionValues",
+            argtypes=[ct.c_int64],
+            return_type=ct.POINTER(ct.c_double*self._numEstimatedParameters.value)
+        )
 
     def getSolutionValues(self):
         return self._getSolutionValues(self._obj)
@@ -127,7 +131,12 @@ class SRES:
     )
 
     def fit(self):
-        return self._fit(self._obj)
+        self._fit(self._obj)
+        dct = dict(
+            best_cost=self.getBestValue().contents.value,
+            best_solution=[i for i in self.getSolutionValues(self._obj).contents]
+        )
+        return dct
 
     _freeSolutionValues = _sres._load_func(
         funcname="freeSolutionValues",
