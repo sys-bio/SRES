@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
-from typing import List
 import ctypes as ct
-import os, sys
+import os
+import sys
+from typing import List
 
 
 class _SRESLoader:
@@ -48,12 +48,8 @@ class _SRESLoader:
 class SRES:
     _sres = _SRESLoader()
 
-    # decorator for wrapping cost function written in Python
-    COST_FUNCTION_CALLBACK = ct.CFUNCTYPE(None, ct.POINTER(ct.c_double * 2), ct.POINTER(ct.c_double),
-                                          ct.POINTER(ct.c_double))
-
     # note when seed is 0, it'll be randomized. Special case.
-    def __init__(self, cost_function: COST_FUNCTION_CALLBACK, ngen: int, ub: List[float], lb: List[float],
+    def __init__(self, cost_function, ngen: int, ub: List[float], lb: List[float],
                  parent_popsize: int = 50, child_popsize: int = 200, es: int = 1,
                  gamma: float = 0.85, alpha: float = 0.2, pf: float = 0.45,
                  varphi: float = 1.0, retry: int = 1, seed: int = 0):
@@ -109,7 +105,15 @@ class SRES:
         )
 
     @staticmethod
-    @COST_FUNCTION_CALLBACK
+    def callback(size: int):
+        # decorator for wrapping cost function written in Python
+        return ct.CFUNCTYPE(
+            None, ct.POINTER(ct.c_double * size),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double)
+        )
+
+    @staticmethod
     def cost_function(x, f, g):
         raise NotImplementedError("You need to implement a cost function")
 
@@ -206,7 +210,7 @@ class SRES:
                 ct.c_int32,  # unsigned int seed,
                 ct.c_int64,  # ESParameter **param,
                 ct.c_int64,  # ESfcnTrsfm *trsfm,
-                self.COST_FUNCTION_CALLBACK,  # ESfcnFG fg
+                self.callback(self.dim.value),  # ESfcnFG fg
                 ct.c_int32,  # int es, 0 or 1; ES process, esDefESPlus/esDefESSlash
                 ct.c_int32,  # int constraint,
                 ct.c_int32,  # int dim,
@@ -224,7 +228,7 @@ class SRES:
             ],
             return_type=None)
 
-    def getBestParameters(self) :
+    def getBestParameters(self):
         _ESGetBestParameters = self._sres._load_func(
             funcname="ESGetBestParameters",
             argtypes=[
@@ -234,7 +238,6 @@ class SRES:
         )
         dbl_array = _ESGetBestParameters(self._stat_ptr)
         return [x for x in dbl_array.contents]
-
 
     """/**
      * @brief Create a ESPopulation 
@@ -287,5 +290,3 @@ class SRES:
             ct.c_bool,  # print stats
         ],
         return_type=ct.c_double)
-
-

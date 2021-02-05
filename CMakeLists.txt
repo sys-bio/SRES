@@ -101,6 +101,7 @@ configure_file(
 
 add_subdirectory(external)
 
+add_subdirectory(csres)
 add_subdirectory(sres)
 
 
@@ -108,6 +109,7 @@ option(COPY_BINARY_TO_PYTHON_DIR " when true, find the SRES binary and copy to s
 
 if (COPY_BINARY_TO_PYTHON_DIR)
     install(TARGETS SRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
+    install(TARGETS CCSRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/csres")
 endif ()
 
 find_package(Python)

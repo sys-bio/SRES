@@ -1,5 +1,5 @@
 import tellurium as te
-from sres import SRES
+from csres import SRES
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 import numpy as np
 
@@ -100,12 +100,9 @@ time = dataValues[:, 1]  # copy for later
 dataValues = dataValues[:, 1:]
 
 
-# print(dataValues)
-#
-# print(r.simulate(0, 1000, 11, ["L", "E", "P", "R"]))
 
-@SRES.COST_FUNCTION_CALLBACK
-def cost_fun(parameters, fitness, constraints):
+@SRES.callback(len(r.freeParameters()))
+def cost_fun(parameters):
     # Reset the model before
     r.reset()
 
@@ -125,7 +122,7 @@ def cost_fun(parameters, fitness, constraints):
 
     # update fitness. This step is crucial and evey cost function
     # must have this line
-    fitness.contents.value = cost
+    return cost
 
 
 if __name__ == "__main__":
@@ -135,20 +132,17 @@ if __name__ == "__main__":
 
     sres = SRES(
         cost_function=cost_fun,
-        ngen=ngen,
-        lb=[0.1] * 43,
-        ub=[10] * 43,
-        parent_popsize=popsize,
-        child_popsize=popsize*7,
-        gamma=0.85,
-        alpha=0.2,
-        es=0,
-        varphi=1,
-        retry=10,
-        pf=0.475
+        popsize=popsize,
+        numGenerations=ngen,
+        startingValues=[8.3434, 6.342, 3.765] ,
+        lb=[0.001] * len(r.freeParameters()),
+        ub=[100] * len(r.freeParameters()),
+        childrate=7,
     )
 
-    sres.fit(True)
+    results = sres.fit()
+    print(results)
+
 
 
 # pf = 1
