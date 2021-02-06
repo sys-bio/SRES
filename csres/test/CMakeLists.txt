@@ -20,6 +20,7 @@ install(
 )
 
 
+
 set(target OptItemTests)
 add_executable(${target} TestOptItem.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
@@ -28,6 +29,17 @@ target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
 set(target OptItemsTests)
 add_executable(${target} TestOptItems.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
+
+
+set(target CSRESTest)
+add_executable(${target} CSRESTest.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
+
+
+
+set(target CCSRESTest)
+add_executable(${target} CCSRESTest.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main CCSRES)
 
 
 

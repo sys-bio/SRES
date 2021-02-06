@@ -10,11 +10,11 @@
 namespace csres {
 
 
-    void setLastError(std::string err) {
+    void SRES_setLastError(std::string err) {
         LAST_ERROR = std::move(err);
     }
 
-    char *getLastError() {
+    char *SRES_getLastError() {
         if (LAST_ERROR.empty()) {
             return nullptr;
         }
@@ -23,11 +23,11 @@ namespace csres {
         return cstr;
     }
 
-    void clearLastError(const std::string &err) {
+    void SRES_clearLastError(const std::string &err) {
         LAST_ERROR = "";
     }
 
-    SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
+    SRES *SRES_newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
                   double *startingValues, const double *lb, double *ub, int numEstimatedParameters, int childrate) {
 
         std::vector<double> startVals(startingValues, startingValues + numEstimatedParameters);
@@ -38,12 +38,12 @@ namespace csres {
         return sres;
     }
 
-    void deleteSRES(SRES *sres) {
+    void SRES_deleteSRES(SRES *sres) {
         delete sres;
     }
 
 
-    const double *getSolutionValues(SRES *sres) {
+    double *SRES_getSolutionValues(SRES *sres) {
         const std::vector<double> &sol = sres->getSolutionValues();
         auto *dsol = (double *) malloc(sizeof(double) * sol.size());
         for (int i = 0; i < sol.size(); i++) {
@@ -52,33 +52,34 @@ namespace csres {
         return dsol;
     }
 
-    double *getBestValue(SRES *sres) {
+    double *SRES_getBestValue(SRES *sres) {
         auto *bval = (double *) malloc(sizeof(double));
         double v = sres->getBestValue();
         *bval = v;
         return bval;
     }
 
-    bool fit(SRES *sres) {
+    bool SRES_fit(SRES *sres) {
         return sres->fit();
     }
 
-    void freeSolutionValues(const double *sol) {
+    void SRES_freeSolutionValues(const double *sol) {
         free((void *) sol);
     }
 
-    void freeBestValue(const double *val) {
+    void SRES_freeBestValue(const double *val) {
         free((void *) val);
     }
 
-    void setSeed(SRES *sres, unsigned long long seed) {
+    void SRES_setSeed(SRES *sres, unsigned long long seed) {
         sres->setSeed(seed);
     }
 
-    double *getTrace(SRES *sres, int sizeOfTrace) {
+    double *SRES_getTrace(SRES *sres, int sizeOfTrace) {
         auto *bval = (double *) malloc(sizeof(double) * sizeOfTrace);
         std::vector<double> v = sres->getTrace();
         for (int i=0; i<sizeOfTrace; i++){
+            std::cout << "from C: v[i]: " << v[i]<<std::endl;
             *bval = v[i];
         }
         return bval;

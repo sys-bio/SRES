@@ -15,31 +15,31 @@ namespace csres {
     extern "C" {
 #endif
 
-    void setLastError(std::string err);
+    void SRES_setLastError(std::string err);
 
-    char *getLastError();
+    char *SRES_getLastError();
 
-    void clearLastError(const std::string &err);
+    void SRES_clearLastError(const std::string &err);
 
-    SRES *newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
+    SRES *SRES_newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
                   double *startingValues, const double *lb, double *ub,
                   int numEstimatedParameters, int childrate = 7);
 
-    void deleteSRES(SRES* sres);
+    void SRES_deleteSRES(SRES* sres);
 
-    const double *getSolutionValues(SRES* sres);
+    double *SRES_getSolutionValues(SRES* sres);
 
-    double* getBestValue(SRES* sres);
+    double* SRES_getBestValue(SRES* sres);
 
-    bool fit(SRES* sres);
+    bool SRES_fit(SRES* sres);
 
-    void freeSolutionValues(const double *sol) ;
+    void SRES_freeSolutionValues(const double *sol) ;
 
-    void freeBestValue(const double *val);
+    void SRES_freeBestValue(const double *val);
 
-    void setSeed(SRES* sres, unsigned long long seed);
+    void SRES_setSeed(SRES* sres, unsigned long long seed);
 
-    double *getTrace(SRES *sres, int sizeOfTrace);
+    double *SRES_getTrace(SRES *sres, int sizeOfTrace);
 
     }
 

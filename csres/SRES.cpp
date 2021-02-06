@@ -34,8 +34,8 @@ namespace csres {
         return childrate_;
     }
 
-    void SRES::setChildrate(int childrate_) {
-        childrate_ = childrate_;
+    void SRES::setChildrate(int childrate) {
+        childrate_ = childrate;
     }
 
     int SRES::getNumGenerations() const {
@@ -208,7 +208,7 @@ namespace csres {
          * Instead we use a raw double, which means we need
          * to construct a raw double array from individual
          */
-         double* pd = individual.data();
+        double *pd = individual.data();
 
         fitnessValue_ = (*cost_)(pd);
 
@@ -543,7 +543,8 @@ namespace csres {
             for (j = 0; j < TotalPopulation - 1; j++)  // lambda is number of individuals
             {
                 if ((phi_[j] == 0 && phi_[j + 1] == 0) || // within bounds
-                    (RandomNumberGenerator::getInstance().uniformReal(0, 1) < pf_))      // random chance to compare values outside bounds
+                    (RandomNumberGenerator::getInstance().uniformReal(0, 1) <
+                     pf_))      // random chance to compare values outside bounds
                 {
                     // compare obj fcn using mValue alternative code
                     if (values_[j] > values_[j + 1]) {
@@ -560,13 +561,33 @@ namespace csres {
             }
 
             // if nothing was swapped, then they're ordered!
-            if (wasSwapped == false) break;
+            if (!wasSwapped) break;
         }
+    }
+
+    bool SRES::setSolution(const double &value,
+                           const std::vector<double> &variables) {
+        bestValue_ = value;
+        hallOfFame_.push_back(bestValue_);
+
+        // The initialization call from SRES and GASR have NULL as variables
+         if (!variables.empty())
+            solutionValues_ = variables;
+
+        bool Continue = true;
+
+        if (value == -std::numeric_limits<double>::infinity())
+            Continue = false;
+
+        // if (mpCallBack)
+        //    Continue &= mpCallBack->progressItem(mhSolutionValue);
+
+        return Continue;
     }
 
     bool SRES::fit() {
         bool Continue = true;
-        size_t BestIndex = std::numeric_limits<size_t>::max();
+        size_t bestIndex = std::numeric_limits<size_t>::max();
 
         size_t Stalled = 0;
 
@@ -583,17 +604,14 @@ namespace csres {
         Continue = creation(0);
 
         // initialise solution variables. (cw not the same as original)
-        bestValue_ = values_[0];
-        solutionValues_ = individuals_[0];
+        setSolution(values_[0], individuals_[0]);
 
         // get the index of the fittest
-        BestIndex = fittest();
+        bestIndex = fittest();
 
-        if (BestIndex != std::numeric_limits<size_t>::max()) {
+        if (bestIndex != std::numeric_limits<size_t>::max()) {
             // and store that value
-            bestValue_ = values_[BestIndex];
-            hallOfFame_.push_back(bestValue_);
-            solutionValues_ = individuals_[BestIndex];
+            setSolution(values_[bestIndex], individuals_[bestIndex]);
 
             // todo will need something to replace this
             // We found a new best value lets report it.
@@ -620,15 +638,10 @@ namespace csres {
             select();
 
             // get the index of the fittest
-            BestIndex = fittest();
+            bestIndex = fittest();
 
-            if (BestIndex != std::numeric_limits<size_t>::max() &&
-                values_[BestIndex] < bestValue_) {
-
-                bestValue_ = values_[BestIndex];
-
-                solutionValues_ = individuals_[BestIndex];
-
+            if (bestIndex != std::numeric_limits<size_t>::max() && values_[bestIndex] < bestValue_) {
+                setSolution(bestValue_, individuals_[bestIndex]);
             }
 
             // if (mpCallBack)

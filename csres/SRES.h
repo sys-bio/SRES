@@ -86,6 +86,8 @@ namespace csres {
 
         void select();
 
+        bool setSolution(const double &value, const std::vector<double> &variables);
+
     private:
 
         DoubleMatrix individuals_;

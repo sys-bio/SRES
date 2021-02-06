@@ -2,7 +2,9 @@ import tellurium as te
 from csres import SRES
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 import numpy as np
-
+import roadrunner
+roadrunner.Logger.setLevel(roadrunner.Logger.LOG_CRITICAL)
+roadrunner.Logger.disableConsoleLogging()
 
 def freeParameters(self):
     return ["v_0", "ra_0", "kf_0", "kr_0", "Kma_0", "Kms_0", "Kmp_0", "wa_0", "ms_0",
@@ -106,6 +108,7 @@ def cost_fun(parameters):
     # Reset the model before
     r.reset()
 
+
     # set the new parameter values
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
@@ -113,9 +116,12 @@ def cost_fun(parameters):
         setattr(r, param, val)
 
     # compute cost.
-    # CW remove the time column
-    sim = r.simulate(0, 1000, 11, ["L", "E", "P", "R"])
-
+    try:
+        sim = r.simulate(0, 1000, 11, ["L", "E", "P", "R"])
+    except RuntimeError:
+        return 1000000000
+    except Warning:
+        return 1000000000
     # cw we can use np broadcasting to take care of the details
     # Think its faster too
     cost = np.sum(np.sum((dataValues - sim) ** 2))
@@ -127,16 +133,16 @@ def cost_fun(parameters):
 
 if __name__ == "__main__":
 
-    ngen = 1000
-    popsize = 150
+    ngen = 25
+    popsize = 15
 
     sres = SRES(
         cost_function=cost_fun,
         popsize=popsize,
         numGenerations=ngen,
         startingValues=[8.3434, 6.342, 3.765] ,
-        lb=[0.001] * len(r.freeParameters()),
-        ub=[100] * len(r.freeParameters()),
+        lb=[0.01] * len(r.freeParameters()),
+        ub=[10] * len(r.freeParameters()),
         childrate=7,
     )
 
@@ -145,10 +151,7 @@ if __name__ == "__main__":
 
 
 
-# pf = 1
-# for i in range(100):
-#     f = sres.step(0.45, True)
-#     print (f)
+
 
 
 

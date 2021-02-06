@@ -149,7 +149,6 @@ class SRES:
         )
         return dct
 
-
     _freeSolutionValues = _sres._load_func(
         funcname="freeSolutionValues",
         argtypes=[ct.POINTER(ct.c_double)],

@@ -32,8 +32,8 @@ int main() {
     double s[2] = {9.454, 3.556};
     double l[2] = {0.1, 0.1};
     double u[2] = {10.0, 10.0};
-    SRES* sres = newSRES(cost, 10, 50, s, l, u, 2, 7);
-    fit(sres);
+    SRES* sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+    SRES_fit(sres);
 
     std::cout << "Solution best fit: " << sres->getBestValue() << "; best solution: ";
     for (auto i: sres->getSolutionValues()){
@@ -41,7 +41,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    double* trace = getTrace(sres, sres->getNumGenerations());
+    double* trace = SRES_getTrace(sres, sres->getNumGenerations());
 
     for (int i=0; i< sres->getNumGenerations(); i++){
         std::cout << trace[i] << std::endl;
