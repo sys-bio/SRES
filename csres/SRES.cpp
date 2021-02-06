@@ -3,48 +3,13 @@
 //
 
 #include "SRES.h"
-#include "RandomNumberGenerator.h"
-
-#include <utility>
 #include <vector>
-#include <random>
-#include <chrono>
-#include <iostream>
 
-namespace csres {
+namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
                const DoubleVector &ub, int childrate)
-            : cost_(cost),
-              populationSize_(populationSize),
-              numGenerations_(numGenerations),
-              optItems_(OptItems(startingValues, lb, ub)),
-              numberOfParameters_(lb.size()),
-              childrate_(childrate) {}
-
-    int SRES::getPopulationSize() const {
-        return populationSize_;
-    }
-
-    void SRES::setPopulationSize(int populationSize) {
-        SRES::populationSize_ = populationSize;
-    }
-
-    int SRES::getChildrate() const {
-        return childrate_;
-    }
-
-    void SRES::setChildrate(int childrate) {
-        childrate_ = childrate;
-    }
-
-    int SRES::getNumGenerations() const {
-        return numGenerations_;
-    }
-
-    void SRES::setNumGenerations(int numGenerations) {
-        SRES::numGenerations_ = numGenerations;
-    }
+            : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate) {};
 
     const DoubleVector &SRES::getMaxVariance() const {
         return maxVariance_;
@@ -62,19 +27,18 @@ namespace csres {
         pf_ = pf;
     }
 
-
     bool SRES::swap(size_t from, size_t to) {
-        DoubleVector pTmp = individuals_[to];
-        individuals_[to] = individuals_[from];
-        individuals_[from] = pTmp;
+        DoubleVector pTmp = population_[to];
+        population_[to] = population_[from];
+        population_[from] = pTmp;
 
         pTmp = variance_[to];
         variance_[to] = variance_[from];
         variance_[from] = pTmp;
 
-        double dTmp = values_[to];
-        values_[to] = values_[from];
-        values_[from] = dTmp;
+        double dTmp = populationFitness_[to];
+        populationFitness_[to] = populationFitness_[from];
+        populationFitness_[from] = dTmp;
 
         dTmp = phi_[to];
         phi_[to] = phi_[from];
@@ -89,7 +53,7 @@ namespace csres {
         size_t Parent;
         size_t i, j;
 
-        auto itSrc = individuals_.begin();
+        auto itSrc = population_.begin();
         auto endSrc = itSrc + populationSize_;
         auto itTarget = endSrc;
         auto itSrcVariance = variance_.begin();
@@ -102,7 +66,7 @@ namespace csres {
         // iterate over parents
         for (i = 0; itSrc != endSrc && Continue; ++itSrc, ++itSrcVariance, ++i) {
             // iterate over the child rate - 1 since the first child is the parent.
-            for (j = 1; j < getChildrate(); ++j, ++itTarget, ++itTargetVariance) {
+            for (j = 1; j < getChildRate(); ++j, ++itTarget, ++itTargetVariance) {
                 // first just copy the individuals
                 *itTarget = *itSrc;
                 *itTargetVariance = *itSrcVariance;
@@ -129,14 +93,14 @@ namespace csres {
     }
 
     bool SRES::mutate() {
-        auto it = individuals_.begin() + populationSize_;
-        auto end = individuals_.end();
+        auto it = population_.begin() + populationSize_;
+        auto end = population_.end();
         auto itVariance = variance_.begin() + populationSize_;
 
         double *pVariable, *pVariableEnd, *pVariance, *pMaxVariance;
 //        double *pPhi = mPhi.array() + populationSize_;
         double *pPhi = &phi_[0] + populationSize_;
-        double *pValue = &values_[0] + populationSize_;
+        double *pValue = &populationFitness_[0] + populationSize_;
 
         bool Continue = true;
         size_t i, j;
@@ -199,22 +163,6 @@ namespace csres {
         return Continue;
     }
 
-    bool SRES::evaluate(std::vector<double> individual) {
-        bool Continue = true;
-
-        /**
-         * sadly, to make this interoperable with C and therefore
-         * Python, I could not used std::function for the callback.
-         * Instead we use a raw double, which means we need
-         * to construct a raw double array from individual
-         */
-        double *pd = individual.data();
-
-        fitnessValue_ = (*cost_)(pd);
-
-        return Continue;
-    }
-
 
     // evaluate the distance of parameters and constraints to boundaries
     double SRES::phi(size_t indivNum) {
@@ -223,7 +171,7 @@ namespace csres {
 
         auto it = optItems_.begin();
         auto end = optItems_.end();
-        double *pValue = individuals_[indivNum].data();
+        double *pValue = population_[indivNum].data();
 
         for (; it != end; ++it, pValue++) {
             switch (it->checkConstraint()) {
@@ -260,14 +208,14 @@ namespace csres {
             pf_ = 0.475;
         }
 
-        individuals_.resize(childrate_ * populationSize_);
+        population_.resize(childRate_ * populationSize_);
 
-        for (i = 0; i < childrate_ * populationSize_; i++)
-            individuals_[i] = std::vector<double>(numberOfParameters_);
+        for (i = 0; i < childRate_ * populationSize_; i++)
+            population_[i] = std::vector<double>(numberOfParameters_);
 
-        variance_.resize(childrate_ * populationSize_);
+        variance_.resize(childRate_ * populationSize_);
 
-        for (i = 0; i < childrate_ * populationSize_; i++)
+        for (i = 0; i < childRate_ * populationSize_; i++)
             variance_[i] = std::vector<double>(numberOfParameters_);
 
         maxVariance_.resize(numberOfParameters_);
@@ -283,33 +231,25 @@ namespace csres {
             }
         }
 
-        values_.resize(childrate_ * populationSize_);
-        values_.assign(values_.size(), std::numeric_limits<double>::infinity());
-        bestValue_ = std::numeric_limits<double>::infinity();
+        populationFitness_.resize(childRate_ * populationSize_);
+        populationFitness_.assign(populationFitness_.size(), std::numeric_limits<double>::infinity());
+        bestFitnessValue_ = std::numeric_limits<double>::infinity();
+        hallOfFame_.push_back(bestFitnessValue_);
 
-        phi_.resize(childrate_ * populationSize_);
+        phi_.resize(childRate_ * populationSize_);
 
         try {
-            /*
-            double alpha = 0.2;
-            double chi = 1 / (2 * sqrt(double(numberOfParameters_))) + 1 / (2 * double(numberOfParameters_));
-            double varphi = sqrt(2/chi * log(1/alpha) *exp(chi/2 -(1-alpha)));
-            */
 
-            double varphi = 1;
+            // double alpha = 0.2;
+            // double chi = 1 / (2 * sqrt(double(numberOfParameters_))) + 1 / (2 * double(numberOfParameters_));
+            // double varphi = sqrt(2/chi * log(1/alpha) *exp(chi/2 -(1-alpha)));
+
+            double varphi = 1; // or just set varphi to 1
             tau_ = varphi / sqrt(2 * sqrt(double(numberOfParameters_)));
             tauPrime_ = varphi / sqrt(2 * double(numberOfParameters_));
-        }
-        catch (...) {
+        } catch (...) {
             tau_ = tauPrime_ = 1;
         }
-
-        /**
-         * todo Might be worth keeping after initial algorithm implemented.
-         */
-        // if (stopAfterStalledGenerations_ > 0 )
-        //    mStopAfterStalledGenerations = getValue < unsigned int > ("Stop after # Stalled Generations");
-
         return true;
     }
 
@@ -324,16 +264,16 @@ namespace csres {
 
         bool Continue = true;
 
-        auto it = individuals_.begin() + first;
-        auto end = individuals_.begin() + populationSize_;
+        auto it = population_.begin() + first;
+        auto end = population_.begin() + populationSize_;
         auto itVariance = variance_.begin() + first;
 
         double *pVariable, *pVariableEnd, *pVariance, *pMaxVariance;
         double *pPhi = phi_.data() + first;
-        double *pValue = values_.data() + first;
+        double *pValue = populationFitness_.data() + first;
 
         // set the first individual to the initial guess
-        if (it == individuals_.begin()) {
+        if (it == population_.begin()) {
             pVariable = it->data();
             pVariableEnd = pVariable + numberOfParameters_;
             pVariance = itVariance->data();
@@ -421,7 +361,7 @@ namespace csres {
                     {
                         la = log10(mx) - log10(std::max(mn, std::numeric_limits<double>::min()));
 
-                        if (la < 1.8 || !(mn > 0.0)) // linear
+                        if (la < 1.8 || mn <= 0.0) // linear
                             mut = mn + RandomNumberGenerator::getInstance().uniformReal(0, 1) * (mx - mn);
                         else
                             mut = pow(10.0, log10(std::max(mn, std::numeric_limits<double>::min())) +
@@ -449,7 +389,7 @@ namespace csres {
 
                         la = log10(mx) - log10(std::max(mn, std::numeric_limits<double>::min()));
 
-                        if (la < 1.8 || !(mn > 0.0)) // linear
+                        if (la < 1.8 || mn <= 0.0) // linear
                             mut = -(mn + RandomNumberGenerator::getInstance().uniformReal(0, 1) * (mx - mn));
                         else
                             mut = -pow(10.0, log10(std::max(mn, std::numeric_limits<double>::min())) +
@@ -512,22 +452,23 @@ namespace csres {
     }
 
     // check the best individual at this generation
-    size_t SRES::fittest() {
-        size_t i, BestIndex = std::numeric_limits<size_t>::max();
-        double BestValue = std::numeric_limits<double>::max();
+    size_t SRES::findBestIndividual() {
+        size_t i, bestIndex = std::numeric_limits<size_t>::max();
+        double bestValue = std::numeric_limits<double>::max();
 
         for (i = 0; i < populationSize_; i++)
-            if (values_[i] < BestValue && phi_[i] == 0) {
-                BestIndex = i;
-                BestValue = values_[i];
+            if (populationFitness_[i] < bestValue && phi_[i] == 0) {
+                bestIndex = i;
+                bestValue = populationFitness_[i];
+                solutionValues_ = population_[i];
             }
 
-        return BestIndex;
+        return bestIndex;
     }
 
     void SRES::select() {
         size_t i, j;
-        size_t TotalPopulation = individuals_.size();
+        size_t TotalPopulation = population_.size();
         bool wasSwapped;
         size_t sweepNum = TotalPopulation;  // This is default based on paper
 
@@ -547,7 +488,7 @@ namespace csres {
                      pf_))      // random chance to compare values outside bounds
                 {
                     // compare obj fcn using mValue alternative code
-                    if (values_[j] > values_[j + 1]) {
+                    if (populationFitness_[j] > populationFitness_[j + 1]) {
                         swap(j, j + 1);
                         wasSwapped = true;
                     }
@@ -565,25 +506,6 @@ namespace csres {
         }
     }
 
-    bool SRES::setSolution(const double &value,
-                           const std::vector<double> &variables) {
-        bestValue_ = value;
-        hallOfFame_.push_back(bestValue_);
-
-        // The initialization call from SRES and GASR have NULL as variables
-         if (!variables.empty())
-            solutionValues_ = variables;
-
-        bool Continue = true;
-
-        if (value == -std::numeric_limits<double>::infinity())
-            Continue = false;
-
-        // if (mpCallBack)
-        //    Continue &= mpCallBack->progressItem(mhSolutionValue);
-
-        return Continue;
-    }
 
     bool SRES::fit() {
         bool Continue = true;
@@ -604,14 +526,26 @@ namespace csres {
         Continue = creation(0);
 
         // initialise solution variables. (cw not the same as original)
-        setSolution(values_[0], individuals_[0]);
+        bestFitnessValue_ = populationFitness_[0];
+        solutionValues_ = population_[0];
+        hallOfFame_.push_back(populationFitness_[0]);
+
+        if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+            Continue = false;
+
 
         // get the index of the fittest
-        bestIndex = fittest();
+        bestIndex = findBestIndividual();
 
         if (bestIndex != std::numeric_limits<size_t>::max()) {
             // and store that value
-            setSolution(values_[bestIndex], individuals_[bestIndex]);
+            bestFitnessValue_ = populationFitness_[bestIndex];
+            solutionValues_ = population_[bestIndex];
+            hallOfFame_.push_back(populationFitness_[bestIndex]);
+
+            if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+                Continue = false;
+
 
             // todo will need something to replace this
             // We found a new best value lets report it.
@@ -638,55 +572,36 @@ namespace csres {
             select();
 
             // get the index of the fittest
-            bestIndex = fittest();
+            bestIndex = findBestIndividual();
 
-            if (bestIndex != std::numeric_limits<size_t>::max() && values_[bestIndex] < bestValue_) {
-                setSolution(bestValue_, individuals_[bestIndex]);
+            if (bestIndex != std::numeric_limits<size_t>::max() && populationFitness_[bestIndex] < bestFitnessValue_) {
+                if (bestIndex != std::numeric_limits<size_t>::max()) {
+                    // and store that value
+                    bestFitnessValue_ = populationFitness_[bestIndex];
+                    hallOfFame_.push_back(populationFitness_[bestIndex]);
+                    solutionValues_ = population_[bestIndex];
+                    if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+                        Continue = false;
+                }
+
+                // if (mpCallBack)
+                //    Continue = mpCallBack->progressItem(mhGenerations);
+
+                //use a different output channel. It will later get a proper enum name
+                // mpParentTask->output(COutputInterface::MONITORING);
             }
 
-            // if (mpCallBack)
-            //    Continue = mpCallBack->progressItem(mhGenerations);
+            //if (mLogVerbosity > 0)
+            //    mMethodLog.enterLogEntry(
+            //            COptLogEntry("Algorithm finished.",
+            //                         "Terminated after " + std::to_string(currentGeneration_ - 1) + " of " +
+            //                         std::to_string(mGenerations) + " generations."));
 
-            //use a different output channel. It will later get a proper enum name
-            // mpParentTask->output(COutputInterface::MONITORING);
+            //if (mpCallBack)
+            //    mpCallBack->finishItem(mhGenerations);
+
         }
-
-        //if (mLogVerbosity > 0)
-        //    mMethodLog.enterLogEntry(
-        //            COptLogEntry("Algorithm finished.",
-        //                         "Terminated after " + std::to_string(currentGeneration_ - 1) + " of " +
-        //                         std::to_string(mGenerations) + " generations."));
-
-        //if (mpCallBack)
-        //    mpCallBack->finishItem(mhGenerations);
-
-//        }
-
         return true;
-    }
-
-    const std::vector<double> &SRES::getSolutionValues() const {
-        return solutionValues_;
-    }
-
-    void SRES::setSolutionValues(const std::vector<double> &solutionValues) {
-        solutionValues_ = solutionValues;
-    }
-
-    double SRES::getBestValue() const {
-        return bestValue_;
-    }
-
-    void SRES::setBestValue(double bestValue) {
-        bestValue_ = bestValue;
-    }
-
-    void SRES::setSeed(unsigned long long int seed) {
-        RandomNumberGenerator::getInstance().setSeed(seed);
-    }
-
-    std::vector<double> SRES::getTrace() {
-        return hallOfFame_;
     }
 
 

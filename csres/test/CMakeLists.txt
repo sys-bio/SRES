@@ -22,12 +22,12 @@ install(
 
 
 set(target OptItemTests)
-add_executable(${target} TestOptItem.cpp)
+add_executable(${target} OptItemTest.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
 
 
 set(target OptItemsTests)
-add_executable(${target} TestOptItems.cpp)
+add_executable(${target} OptItemsTest.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
 
 
@@ -40,6 +40,12 @@ target_link_libraries(${target} PRIVATE gtest gtest_main CSRES)
 set(target CCSRESTest)
 add_executable(${target} CCSRESTest.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main CCSRES)
+
+
+set(target EvolutionaryOptimizerTests)
+add_executable(${target} EvolutionaryOptimizerTests)
+target_link_libraries(${target} PRIVATE gtest gtest_main CCSRES)
+target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 

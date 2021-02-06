@@ -1,5 +1,7 @@
 set(target CSRES)
 add_library(${target} STATIC
+        Optimizer
+        EvolutionaryOptimizer
         SRES
         RandomNumberGenerator
         OptItem

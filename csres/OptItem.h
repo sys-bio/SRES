@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace csres {
+namespace opt {
 
     class OptItem {
 

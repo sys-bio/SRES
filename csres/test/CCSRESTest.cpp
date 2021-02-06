@@ -18,54 +18,88 @@ double cost(double *input_params) {
 }
 
 
-using namespace csres;
+using namespace opt;
 
 class CCSRESTests : public ::testing::Test {
 
 public:
+
+    double s[2] = {9.454, 3.556};
+    double l[2] = {0.1, 0.1};
+    double u[2] = {10.0, 10.0};
+
     CCSRESTests() = default;
 
 };
 
 
 TEST_F(CCSRESTests, TestConstructible1) {
-    double s[2] = {9.454, 3.556};
-    double l[2] = {0.1, 0.1};
-    double u[2] = {10.0, 10.0};
     ASSERT_NO_THROW(
-            SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+           SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+            SRES_deleteSRES(sres);
     );
 }
 
 
-TEST_F(CCSRESTests, TestGetSolutionValues) {
-    double s[2] = {9.454, 3.556};
-    double l[2] = {0.1, 0.1};
-    double u[2] = {10.0, 10.0};
+TEST_F(CCSRESTests, TestGetBestValue) {
     SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
-
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
-    auto sol = SRES_getSolutionValues(sres);
-    double x = 2.9999969270322402;
-    double y = 0.50000109127881553;
-    ASSERT_NEAR(x, sol[0], 0.0000001);
-    ASSERT_NEAR(y, sol[1], 0.0000001);
-    SRES_freeSolutionValues(sol);
+    double best;
+    SRES_getBestFitnessValue(sres, &best);
+    double x = 8.0722599999999995e-11;
+    ASSERT_NEAR(x, best, 0.001);
+    SRES_deleteSRES(sres);
 }
 
-TEST_F(CCSRESTests, TestGetBestValue) {
-    double s[2] = {9.454, 3.556};
-    double l[2] = {0.1, 0.1};
-    double u[2] = {10.0, 10.0};
+TEST_F(CCSRESTests, TestGetSizeOfHOF) {
+    // todo hof only gets updated when a generation finds a better individual than has been seed before.
+    // Therefore, it would be better to also have an array storing the generation of when the individual
+    // achieved their glory.
     SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+    SRES_setSeed(sres, 4);
+    SRES_fit(sres);
+    ASSERT_EQ(12, SRES_getSizeOfHallOfFame(sres));
+    SRES_deleteSRES(sres);
+}
+
+TEST_F(CCSRESTests, TestHallOfFame) {
+    SRES *sres = SRES_newSRES(cost, 10, 100, s, l, u, 2,7);
+    SRES_setSeed(sres, 4);
+    SRES_fit(sres);
+
+    double* hof = SRES_getHallOfFame(sres);
+    // if we find a value in hof that is greater than the previous value then something is very wrong
+    // with our algorithm
+    bool alwaysDecreasing = true;
+    for (int i = 1; i < SRES_getSizeOfHallOfFame(sres); i++) {
+        if (hof[i - 1] < hof[i]) { // if the previous is less that the current, then fitness value has got worse
+            alwaysDecreasing = false;
+            break;
+        }
+    }
+    ASSERT_TRUE(alwaysDecreasing);
+    SRES_deleteSRES(sres);
+}
+
+
+TEST_F(CCSRESTests, TestGetSolutionValues) {
+    SRES *sres = SRES_newSRES(cost, 20, 50, s, l, u, 2, 7);
 
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
-    auto best = SRES_getBestValue(sres);
-    double x = 8.0722599999999995e-11;
-//    ASSERT_NEAR(x, *best, 0.000001);
-    SRES_freeBestValue(best);
+
+    double* sol = SRES_getSolution(sres);
+
+    for (int i=0 ; i<2; i++){
+        std::cout << "solution: parameter "<< sol[i] << std::endl;
+    }
+
+    double x = 3.0;
+    double y = 0.5;
+    ASSERT_NEAR(x, sol[0], 0.01);
+    ASSERT_NEAR(y, sol[1], 0.01);
+    SRES_deleteSRES(sres);
 }
 
 

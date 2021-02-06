@@ -10,21 +10,14 @@
 #include <random>
 #include <functional>
 #include "OptItems.h"
+#include "EvolutionaryOptimizer.h"
 
-namespace csres {
+namespace opt {
 
-    using DoubleMatrix = std::vector<std::vector<double>>;
-    using DoubleVector = std::vector<double>;
 
-    class SRES {
+    class SRES : public EvolutionaryOptimizer {
 
     public:
-        /**
-         * @brief cost function with signature for parameters (to estimate).
-         * @param individual or genome. This is a double vector representing candiate parameters
-         * @return Fitness of the input individual.
-         */
-        typedef double(*CostFunction)(double *);
 
         SRES() = default;
 
@@ -32,108 +25,57 @@ namespace csres {
              const DoubleVector &startingValues, const DoubleVector &lb,
              const DoubleVector &ub, int childrate = 7);
 
-        bool fit();
-
-        std::vector<double> getTrace();
-
-        bool swap(size_t from, size_t to);
-
-        bool replicate();
-
-        [[nodiscard]] int getPopulationSize() const;
-
-        void setPopulationSize(int populationSize);
-
-        [[nodiscard]] int getChildrate() const;
-
-        void setChildrate(int childrate);
-
-
-        [[nodiscard]] int getNumGenerations() const;
-
-        void setNumGenerations(int numGenerations);
-
-        [[nodiscard]] const std::vector<double> &getSolutionValues() const;
-
-        void setSolutionValues(const std::vector<double> &solutionValues);
-
-        [[nodiscard]] double getBestValue() const;
-
-        void setBestValue(double bestValue);
-
-        bool mutate();
-
         [[nodiscard]] const DoubleVector &getMaxVariance() const;
 
         void setMaxVariance(const DoubleVector &maxVariance);
-
-        bool evaluate(std::vector<double> individual);
-
-        double phi(size_t indivNum);
-
 
         [[nodiscard]] double getPf() const;
 
         void setPf(double pf);
 
-        bool initialize();
+        bool fit() override;
+
+    private:
+        bool swap(size_t from, size_t to);
+
+        bool replicate();
+
+        bool mutate() override;
+
+        double phi(size_t indivNum);
+
+        bool initialize() override;
 
         bool creation(size_t first);
 
-        size_t fittest();
+        size_t findBestIndividual() override;
 
-        void setSeed(unsigned long long int seed);
+        void select() override;
 
-        void select();
-
-        bool setSolution(const double &value, const std::vector<double> &variables);
-
-    private:
-
-        DoubleMatrix individuals_;
+        /**
+         * @brief variance of every position in the
+         * populationi matrix
+         * @note (probably correct, might not be)
+         */
         DoubleMatrix variance_;
+
+        /**
+         * @brief largest variance for a particular population.
+         * @note (maybe, is this the row/column oc variance_? todo look into what this is)
+         */
         DoubleVector maxVariance_;
 
-        DoubleVector values_;
-        DoubleVector phi_;
-
         /**
-         * Collect the best values over generations
+         * @brief parameter used in stochastic sorting.
+         * @details usually has a value of 0.475
          */
-        DoubleVector hallOfFame_;
+        double pf_ = 0.475;
 
-        int populationSize_ = 100;
-        int numGenerations_ = 500;
+        double tau_ = 100.0;    // parameter for updating variances
 
-        int childrate_ = 7;
-        double pf_;
-        int numberOfParameters_; // number of parameters to estimate
-        OptItems optItems_;
+        double tauPrime_ = 100.0;    // parameter for updating variances
 
-
-        /**
-        * if no improvement was made after # stalled generations
-        * stop
-        */
-        unsigned int stopAfterStalledGenerations_;
-
-        /**
-        * The value of the last evaluation.
-        */
-        double fitnessValue_;
-
-        double bestValue_;
-
-        std::vector<double> solutionValues_;
-
-        double tau_;    // parameter for updating variances
-
-        double tauPrime_;    // parameter for updating variances
-
-        CostFunction cost_; // way to inject cost function from Python
-
-        int currentGeneration_ = 0;
-
+        DoubleVector phi_;
     };
 
 }

@@ -7,12 +7,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace csres {
-
-
-    void SRES_setLastError(std::string err) {
-        LAST_ERROR = std::move(err);
-    }
+namespace opt {
 
     char *SRES_getLastError() {
         if (LAST_ERROR.empty()) {
@@ -23,69 +18,131 @@ namespace csres {
         return cstr;
     }
 
-    void SRES_clearLastError(const std::string &err) {
-        LAST_ERROR = "";
-    }
+    SRES *SRES_newSRES(CostFunction cost, int populationSize, int numGenerations,
+                       double *startingValues, const double *lb, double *ub, int numEstimatedParameters,
+                       int childrate) {
+        try {
+            std::vector<double> startVals(startingValues, startingValues + numEstimatedParameters);
+            std::vector<double> lb_(lb, lb + numEstimatedParameters);
+            std::vector<double> ub_(ub, ub + numEstimatedParameters);
 
-    SRES *SRES_newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                  double *startingValues, const double *lb, double *ub, int numEstimatedParameters, int childrate) {
-
-        std::vector<double> startVals(startingValues, startingValues + numEstimatedParameters);
-        std::vector<double> lb_(lb, lb + numEstimatedParameters);
-        std::vector<double> ub_(ub, ub + numEstimatedParameters);
-
-        SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_, childrate);
-        return sres;
-    }
-
-    void SRES_deleteSRES(SRES *sres) {
-        delete sres;
-    }
-
-
-    double *SRES_getSolutionValues(SRES *sres) {
-        const std::vector<double> &sol = sres->getSolutionValues();
-        auto *dsol = (double *) malloc(sizeof(double) * sol.size());
-        for (int i = 0; i < sol.size(); i++) {
-            dsol[i] = sol[i];
+            SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_, childrate);
+            return sres;
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return reinterpret_cast<SRES *>(1);
         }
-        return dsol;
     }
 
-    double *SRES_getBestValue(SRES *sres) {
-        auto *bval = (double *) malloc(sizeof(double));
-        double v = sres->getBestValue();
-        *bval = v;
-        return bval;
+    int SRES_deleteSRES(SRES *sres) {
+        delete sres;
+        sres = nullptr;
+        return 0;
+
+    }
+
+    int SRES_getBestFitnessValue(SRES *sres, double *bestFitness) {
+        try {
+            *bestFitness = sres->getBestFitnessValue();
+            return 0;
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
     }
 
     bool SRES_fit(SRES *sres) {
-        return sres->fit();
-    }
-
-    void SRES_freeSolutionValues(const double *sol) {
-        free((void *) sol);
-    }
-
-    void SRES_freeBestValue(const double *val) {
-        free((void *) val);
-    }
-
-    void SRES_setSeed(SRES *sres, unsigned long long seed) {
-        sres->setSeed(seed);
-    }
-
-    double *SRES_getTrace(SRES *sres, int sizeOfTrace) {
-        auto *bval = (double *) malloc(sizeof(double) * sizeOfTrace);
-        std::vector<double> v = sres->getTrace();
-        for (int i=0; i<sizeOfTrace; i++){
-            std::cout << "from C: v[i]: " << v[i]<<std::endl;
-            *bval = v[i];
+        try {
+            return sres->fit();
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
         }
-        return bval;
     }
 
-    // getVariance
+    int SRES_setSeed(SRES *sres, unsigned long long seed) {
+        try {
+            sres->setSeed(seed);
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
+    }
+
+    double *SRES_getHallOfFame(SRES *sres) {
+        try {
+
+            // hof is variable sized, so its better to malloc here
+            auto hof = (double *) malloc(sizeof(double) * sres->getHallOfFame().size());
+            const auto &v = sres->getHallOfFame();
+            std::copy(v.begin(), v.end(), hof);
+            return hof;
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+        }
+    }
+
+    int SRES_freeHallOfFame(double *hof) {
+        if (hof)
+            free(hof);
+        hof = nullptr;
+        return 0;
+    }
+
+    int SRES_getSizeOfHallOfFame(SRES *sres) {
+        try {
+            return sres->getHallOfFame().size();
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
+    }
+
+    int SRES_getSizeOfSolution(SRES *sres) {
+        try {
+            return sres->getSolutionValues().size();
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
+    }
+
+
+    double *SRES_getSolution(SRES *sres) {
+        try {
+            const std::vector<double> &sol = sres->getSolutionValues();
+            auto solution = (double *) malloc(sizeof(double) * sol.size());
+            std::copy(sol.begin(), sol.end(), solution);
+            return solution;
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            // return??
+        }
+    }
+
+    int SRES_freeSolution(double *sol) {
+        free(sol);
+        sol = nullptr;
+        return 0;
+    }
+
+    int freeStuff(void *stuff) {
+        if (stuff) {
+            free(stuff);
+            stuff = nullptr;
+        }
+        return 0;
+    }
+
+    int SRES_getNumberOfEstimatedParameters(SRES *sres) {
+        try {
+            return sres->getNumberOfParameters();
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
+    }
+
 }
 
 

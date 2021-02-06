@@ -6,7 +6,7 @@
 #include "OptItems.h"
 #include "Error.h"
 
-namespace csres {
+namespace opt {
 
     OptItems::OptItems(std::vector<OptItem> optItems)
             : optItems_(std::move(optItems)) {}

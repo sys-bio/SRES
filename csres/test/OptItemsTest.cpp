@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 #include "OptItems.h"
 
-using namespace csres;
+using namespace opt;
 
 class OptItemsTests : public ::testing::Test {
 

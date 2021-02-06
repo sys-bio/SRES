@@ -3,7 +3,7 @@
 #include <iostream>
 #include "random"
 
-using namespace csres;
+using namespace opt;
 
 int N = 10;
 
@@ -32,19 +32,19 @@ int main() {
     double s[2] = {9.454, 3.556};
     double l[2] = {0.1, 0.1};
     double u[2] = {10.0, 10.0};
-    SRES* sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+    SRES* sres = SRES_newSRES(cost, 25, 15, s, l, u, 2, 7);
     SRES_fit(sres);
 
-    std::cout << "Solution best fit: " << sres->getBestValue() << "; best solution: ";
+    std::cout << "Solution best fit: " << sres->getBestFitnessValue() << "; best solution: ";
     for (auto i: sres->getSolutionValues()){
         std::cout << i << "\t" ;
     }
     std::cout << std::endl;
 
-    double* trace = SRES_getTrace(sres, sres->getNumGenerations());
+    double* hof = SRES_getHallOfFame(sres);
 
     for (int i=0; i< sres->getNumGenerations(); i++){
-        std::cout << trace[i] << std::endl;
+        std::cout << hof[i] << std::endl;
 
     }
 }

@@ -8,7 +8,7 @@
 #include <vector>
 #include "OptItem.h"
 
-namespace csres {
+namespace opt {
 
     class OptItems {
 

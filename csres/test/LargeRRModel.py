@@ -1,10 +1,13 @@
-import tellurium as te
-from csres import SRES
-from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 import numpy as np
 import roadrunner
+import tellurium as te
+from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
+
+from csres import SRES
+
 roadrunner.Logger.setLevel(roadrunner.Logger.LOG_CRITICAL)
 roadrunner.Logger.disableConsoleLogging()
+
 
 def freeParameters(self):
     return ["v_0", "ra_0", "kf_0", "kr_0", "Kma_0", "Kms_0", "Kmp_0", "wa_0", "ms_0",
@@ -101,6 +104,8 @@ dataValues = csv = np.genfromtxt('SynC.csv', delimiter=",", skip_header=True)
 time = dataValues[:, 1]  # copy for later
 dataValues = dataValues[:, 1:]
 
+failed_evals = 0
+total_evals = 0
 
 
 @SRES.callback(len(r.freeParameters()))
@@ -108,54 +113,100 @@ def cost_fun(parameters):
     # Reset the model before
     r.reset()
 
-
     # set the new parameter values
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
-        val = parameters.contents[i]
+        val = round(parameters.contents[i], 6)
+        # print("param: val: ", param, ":", val, ",")
         setattr(r, param, val)
 
+    # print("\n")
     # compute cost.
     try:
         sim = r.simulate(0, 1000, 11, ["L", "E", "P", "R"])
     except RuntimeError:
-        return 1000000000
+        return np.inf
     except Warning:
-        return 1000000000
-    # cw we can use np broadcasting to take care of the details
-    # Think its faster too
+        return np.inf
     cost = np.sum(np.sum((dataValues - sim) ** 2))
 
-    # update fitness. This step is crucial and evey cost function
-    # must have this line
+    return cost
+
+
+@SRES.callback(len(r.freeParameters()))
+def cost_fun_mean_squared(parameters):
+    # Reset the model before
+    r.reset()
+
+    # set the new parameter values
+    for i in range(len(parameters.contents)):
+        param = r.freeParameters()[i]
+        val = round(parameters.contents[i], 6)
+        # print("param: val: ", param, ":", val, ",")
+        setattr(r, param, val)
+
+    # print("\n")
+    # compute cost.
+    try:
+        sim = r.simulate(0, 1000, 11, ["L", "E", "P", "R"])
+    except RuntimeError:
+        return np.inf
+    except Warning:
+        return np.inf
+    rss = (dataValues - sim) ** 2
+    mean_of_cols = dataValues.mean(axis=1)
+    for j in range(rss.shape[1]):
+        rss[:, j] /= mean_of_cols[j]
+    cost = np.sum(np.sum(rss))
+
     return cost
 
 
 if __name__ == "__main__":
+    import time
 
-    ngen = 25
-    popsize = 15
+    start = time.time()
+
+    ngen = 500
+    popsize = len(r.freeParameters()) * 30
+
+    # todo is ngen actually doing anything. Simulations that change this
+    #   figure seem very similar.
+
+    best_set = [
+        9.55115313, 0.17003503, 5.65980706, 0.62275698, 2.61161608, 2.42138129,
+        0.96791146, 2.08587429, 0.75860228, 9.92746723, 0.57231008, 1.49119878,
+        0.36182244, 1.72782791, 0.41200846, 3.28571469, 0.93447848, 2.68463832,
+        3.9629908, 7.90269899, 4.85671395, 3.55415979, 1.24501534, 6.36069714,
+        6.85874704, 1.1541854, 1.09199121, 0.95634204, 0.94469065, 0.09810687,
+        2.45212416, 2.65307981, 1.11654523, 1.08075884, 4.29410456, 3.24124077,
+        0.4182004, 8.88402939, 0.66741725, 1.42451539, 1.30466651, 7.10731594,
+        6.93352265]
 
     sres = SRES(
-        cost_function=cost_fun,
+        cost_function=cost_fun_mean_squared,
         popsize=popsize,
         numGenerations=ngen,
-        startingValues=[8.3434, 6.342, 3.765] ,
+        # startingValues=np.random.normal(5, 0.1, len(r.freeParameters())),
+        startingValues=[
+            7.37752164, 0.32413823, 5.82988473, 0.43713322, 1.01093097, 2.35206128,
+            0.46532095, 2.28628958, 0.07024239, 9.76933795, 0.44694504, 1.81720957,
+            0.71393131, 1.0686815, 0.27038349, 3.57630116, 0.69950115, 2.91349584,
+            4.09791179, 7.01174224, 5.54378293, 3.71400609, 1.53214977, 4.13982687,
+            7.21297099, 0.62117021, 0.50708, 2.33197804, 0.31233614, 0.22260176,
+            0.28006133, 1.99641195, 0.5687386, 1.78217515, 4.80706561, 2.5192148,
+            0.86878554, 8.27010811, 0.14919611, 0.80257987, 1.84285307, 5.79002193,
+            6.45840006],
+
         lb=[0.01] * len(r.freeParameters()),
         ub=[10] * len(r.freeParameters()),
         childrate=7,
     )
 
     results = sres.fit()
-    print(results)
 
+    for k, v in results.items():
+        print(k, v)
 
-
-
-
-
-
-
-
-
-
+    print("took ", time.time() - start, "seconds")
+    # todo count function evals and nb failed

@@ -5,7 +5,7 @@
 #include "RandomNumberGenerator.h"
 #include <random>
 
-namespace csres {
+namespace opt {
 
 
 

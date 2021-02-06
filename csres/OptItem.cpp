@@ -5,7 +5,7 @@
 #include "OptItem.h"
 
 
-namespace csres {
+namespace opt {
 
     OptItem::OptItem(double startingValue, double lb, double ub)
             : value_(startingValue), startingValue_(value_), lb_(lb), ub_(ub) {}

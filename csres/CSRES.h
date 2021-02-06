@@ -7,7 +7,7 @@
 
 #include "SRES.h"
 
-namespace csres {
+namespace opt {
 
     std::string LAST_ERROR;
 
@@ -15,32 +15,40 @@ namespace csres {
     extern "C" {
 #endif
 
-    void SRES_setLastError(std::string err);
-
     char *SRES_getLastError();
 
-    void SRES_clearLastError(const std::string &err);
+    SRES *SRES_newSRES(CostFunction cost, int populationSize, int numGenerations,
+                       double *startingValues, const double *lb, double *ub,
+                       int numEstimatedParameters, int childrate = 7);
 
-    SRES *SRES_newSRES(SRES::CostFunction cost, int populationSize, int numGenerations,
-                  double *startingValues, const double *lb, double *ub,
-                  int numEstimatedParameters, int childrate = 7);
+    int SRES_setSeed(SRES *sres, unsigned long long seed);
 
-    void SRES_deleteSRES(SRES* sres);
 
-    double *SRES_getSolutionValues(SRES* sres);
+    double *SRES_getSolution(SRES *sres);
 
-    double* SRES_getBestValue(SRES* sres);
+    int SRES_getBestFitnessValue(SRES *sres, double *bestFitness);
 
-    bool SRES_fit(SRES* sres);
+    /**
+     * The returned pointer is malloc'd and must be freed with
+     * SRES_freeHallOfFame by the caller
+     */
+    double *SRES_getHallOfFame(SRES *sres);
 
-    void SRES_freeSolutionValues(const double *sol) ;
+    int SRES_getSizeOfHallOfFame(SRES *sres);
 
-    void SRES_freeBestValue(const double *val);
+    int SRES_getSizeOfSolution(SRES *sres);
 
-    void SRES_setSeed(SRES* sres, unsigned long long seed);
+    bool SRES_fit(SRES *sres);
 
-    double *SRES_getTrace(SRES *sres, int sizeOfTrace);
+    int SRES_getNumberOfEstimatedParameters(SRES *sres);
 
+    int freeStuff(void *stuff);
+
+    int SRES_freeSolution(double *solution);
+
+    int SRES_freeHallOfFame(double *hof);
+
+    int SRES_deleteSRES(SRES *sres);
     }
 
 }
