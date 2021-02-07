@@ -28,7 +28,7 @@ setup(
     packages=['sres'],
     package_dir={'sres': 'site-packages/sres'},
     package_data={'sres': [
-        f"{SHARED_LIB_PREFIX}SRES{SHARED_LIB_EXT}",
+        f"{SHARED_LIB_PREFIX}SRESC{SHARED_LIB_EXT}",
     ]},
     include_package_data=True,
     platforms=["Windows", "Unix", "Mac OS-X"],

@@ -19,8 +19,7 @@ include(GNUInstallDirs)
 #       Settings
 #
 
-
-# pic - needed on linux ignored on other platofrms
+# pic - needed on linux ignored on other platform
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # put all runtime targets (exe and dll) into bin
@@ -102,7 +101,6 @@ configure_file(
 add_subdirectory(external)
 
 add_subdirectory(sres)
-#add_subdirectory(sres)
 
 
 option(COPY_BINARY_TO_PYTHON_DIR " when true, find the SRES binary and copy to sres python folder" off)
@@ -135,12 +133,12 @@ install(
         DESTINATION
         site-packages/sres
 )
+
 install(
         FILES
         sres/test/__init__.py
         sres/test/BealeFunctionSRES.py
         sres/test/LargeRRModel.py
-        sres/test/SynC.csv
         sres/test/RoadrunnerProblem.py
         DESTINATION site-packages/sres/test
 )
