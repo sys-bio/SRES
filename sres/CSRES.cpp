@@ -41,13 +41,11 @@ namespace opt {
 
     }
 
-    int SRES_getBestFitnessValue(SRES *sres, double *bestFitness) {
+    double SRES_getBestFitnessValue(SRES *sres){
         try {
-            *bestFitness = sres->getBestFitnessValue();
-            return 0;
+            return sres->getBestFitnessValue();
         } catch (std::exception &e) {
             LAST_ERROR = e.what();
-            return -1;
         }
     }
 

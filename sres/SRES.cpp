@@ -4,6 +4,7 @@
 
 #include "SRES.h"
 #include <vector>
+#include <iostream>
 
 namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
@@ -601,6 +602,7 @@ namespace opt {
             //    mpCallBack->finishItem(mhGenerations);
 
         }
+
         return true;
     }
 

@@ -128,12 +128,12 @@ namespace opt {
         /**
         * @brief The fitness of the last evaluation.
         */
-        double fitnessValue_ = 10000000;
+        double fitnessValue_ = 10000000.0;
 
         /**
          * @brief the fitness of the best evaluation so far
          */
-        double bestFitnessValue_ = 10000000;
+        double bestFitnessValue_ = 10000000.0;
 
         /**
          * @brief optimization items. Defines the fitting start
