@@ -1,9 +1,18 @@
+from typing import List
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import roadrunner
+import seaborn as sns
 import tellurium as te
+import pandas as pd
+import os
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
 from csres import SRES
+
+mpl.use("TkAgg")
 
 roadrunner.Logger.setLevel(roadrunner.Logger.LOG_CRITICAL)
 roadrunner.Logger.disableConsoleLogging()
@@ -99,13 +108,12 @@ r = te.loada("""
     end
 """)
 
-dataValues = csv = np.genfromtxt('SynC.csv', delimiter=",", skip_header=True)
+dataValues = np.genfromtxt('SynC.csv', delimiter=",", skip_header=True)
+dataValues_df = pd.DataFrame(dataValues, columns=["time", "L", "E", "P", "R"])
+dataValues_df.set_index("time", inplace=True)
 # CW get rid of time column for convenience
 time = dataValues[:, 1]  # copy for later
 dataValues = dataValues[:, 1:]
-
-failed_evals = 0
-total_evals = 0
 
 
 @SRES.callback(len(r.freeParameters()))
@@ -162,13 +170,60 @@ def cost_fun_mean_squared(parameters):
     return cost
 
 
+def do_estimation(ngen: int = 50, popsize: int = 50, starting_set = None):
+    sres = SRES(
+        cost_function=cost_fun_mean_squared,
+        popsize=popsize,
+        numGenerations=ngen,
+        startingValues=starting_set if starting_set is not None else np.random.normal(5, 0.1, len(r.freeParameters())),
+        lb=[0.01] * len(r.freeParameters()),
+        ub=[10] * len(r.freeParameters()),
+        childrate=7,
+    )
+
+    results = sres.fit()
+
+    for k, v in results.items():
+        print(k, v)
+    return results
+
+
+def plot(results) -> None:
+    r.reset()
+    for k, v in dict(zip(r.freeParameters(), results["bestSolution"])).items():
+        setattr(r, k, v)
+
+    data = r.simulate(0, 1000, 11, ["time", "L", "E", "P", "R"])
+    data = pd.DataFrame(data, columns=data.colnames)
+    data.set_index("time", inplace=True)
+
+    colours = ['c', 'm', 'y', 'k']
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    for i, var in enumerate(data.columns):
+        axes[0].plot(data.index, data[var], label=f"{var}_sim", ls="--", color=colours[i])
+        axes[0].plot(dataValues_df.index, dataValues_df[var], label=f"{var}_exp", ls="None", marker='.', color=colours[i])
+    axes[0].legend(loc=(-0.7, 0.1))
+    axes[0].set_ylabel("AU")
+    axes[0].set_xlabel("Time step")
+    axes[0].set_title("Best fits")
+
+    hof = results["hallOfFame"]
+    axes[1].plot(range(len(hof)), np.log10(hof), ls='-', marker='o')
+    axes[1].set_ylabel("log10 RSS")
+    axes[1].set_xlabel("Generation")
+    axes[1].set_title("Trace")
+    sns.despine(ax=axes[0], top=True, right=True)
+    sns.despine(ax=axes[1], top=True, right=True)
+    plt.savefig(os.path.join(os.path.dirname(__file__), "LargeModel.png"), bbox_inches='tight', dpi=200)
+
+
 if __name__ == "__main__":
     import time
 
     start = time.time()
 
-    ngen = 500
-    popsize = len(r.freeParameters()) * 30
+    ngen = 50
+    popsize = len(r.freeParameters()) * 10
 
     # todo is ngen actually doing anything. Simulations that change this
     #   figure seem very similar.
@@ -183,30 +238,9 @@ if __name__ == "__main__":
         0.4182004, 8.88402939, 0.66741725, 1.42451539, 1.30466651, 7.10731594,
         6.93352265]
 
-    sres = SRES(
-        cost_function=cost_fun_mean_squared,
-        popsize=popsize,
-        numGenerations=ngen,
-        # startingValues=np.random.normal(5, 0.1, len(r.freeParameters())),
-        startingValues=[
-            7.37752164, 0.32413823, 5.82988473, 0.43713322, 1.01093097, 2.35206128,
-            0.46532095, 2.28628958, 0.07024239, 9.76933795, 0.44694504, 1.81720957,
-            0.71393131, 1.0686815, 0.27038349, 3.57630116, 0.69950115, 2.91349584,
-            4.09791179, 7.01174224, 5.54378293, 3.71400609, 1.53214977, 4.13982687,
-            7.21297099, 0.62117021, 0.50708, 2.33197804, 0.31233614, 0.22260176,
-            0.28006133, 1.99641195, 0.5687386, 1.78217515, 4.80706561, 2.5192148,
-            0.86878554, 8.27010811, 0.14919611, 0.80257987, 1.84285307, 5.79002193,
-            6.45840006],
+    results = do_estimation(ngen, popsize, best_set)
 
-        lb=[0.01] * len(r.freeParameters()),
-        ub=[10] * len(r.freeParameters()),
-        childrate=7,
-    )
-
-    results = sres.fit()
-
-    for k, v in results.items():
-        print(k, v)
+    plot(results)
 
     print("took ", time.time() - start, "seconds")
     # todo count function evals and nb failed

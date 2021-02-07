@@ -63,7 +63,7 @@ def get_data(**params) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     return x_data, y_data, r.timeCourseSelections[1:]
 
 
-x_data, y_data, selections = get_data(k1=0.15, k2=0.45, k3=0.05)
+x_data, y_data, selections = get_data()
 
 # Add random noise to synthetic data
 for i in range(0, len(y_data)):

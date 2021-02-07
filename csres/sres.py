@@ -46,18 +46,22 @@ class _CSRESLoader:
         func.argtypes = argtypes
         return func
 
+
 _NUM_LIST_TYPE = List[Union[float, np.ndarray]]
+
+
 class SRES:
     _sres = _CSRESLoader()
 
     def __init__(self, cost_function, popsize: int, numGenerations: int,
-                 startingValues: _NUM_LIST_TYPE , lb: _NUM_LIST_TYPE, ub: _NUM_LIST_TYPE,
+                 startingValues: _NUM_LIST_TYPE, lb: _NUM_LIST_TYPE, ub: _NUM_LIST_TYPE,
                  childrate: int = 7):
         self._cost_function = cost_function
+        self._popsize = popsize
+        self._numGenerations = numGenerations
+        self._childrate = childrate
+
         self._numEstimatedParameters = ct.c_int32(len(ub))
-        self._popsize = ct.c_int32(popsize)
-        self._numGenerations = ct.c_int32(numGenerations)
-        self._childrate = ct.c_int32(childrate)
         BoundaryArray = (ct.c_double * self._numEstimatedParameters.value)
         self.ub = ct.pointer(BoundaryArray(*ub))
         self.lb = ct.pointer(BoundaryArray(*lb))
