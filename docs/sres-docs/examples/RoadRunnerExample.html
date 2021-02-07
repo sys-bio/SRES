@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>RoadRunner Example &mdash; sres 0.0.3 documentation</title>
+  <title>RoadRunner Example &mdash; sres 1.0.0 documentation</title>
   
 
   
@@ -162,245 +162,312 @@
             
   <div class="section" id="roadrunner-example">
 <h1>RoadRunner Example<a class="headerlink" href="#roadrunner-example" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">roadrunner</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 <span class="kn">import</span> <span class="nn">tellurium</span> <span class="k">as</span> <span class="nn">te</span>
-<span class="kn">from</span> <span class="nn">sres</span> <span class="kn">import</span> <span class="n">SRES</span>
 <span class="kn">from</span> <span class="nn">tellurium.roadrunner.extended_roadrunner</span> <span class="kn">import</span> <span class="n">ExtendedRoadRunner</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">sres</span> <span class="kn">import</span> <span class="n">SRES</span>
 
 <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;TkAgg&quot;</span><span class="p">)</span>
 
+<span class="n">roadrunner</span><span class="o">.</span><span class="n">Logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">roadrunner</span><span class="o">.</span><span class="n">Logger</span><span class="o">.</span><span class="n">LOG_CRITICAL</span><span class="p">)</span>
+<span class="n">roadrunner</span><span class="o">.</span><span class="n">Logger</span><span class="o">.</span><span class="n">disableConsoleLogging</span><span class="p">()</span>
 
-<span class="c1">###################################################################################3</span>
-<span class="c1">#   highjacking telluriums interface to roadrunner</span>
-<span class="c1">#</span>
 
 <span class="k">def</span> <span class="nf">freeParameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Roadrunner models do not have a concept of &quot;free&quot; or &quot;fixed&quot;</span>
-<span class="sd">    parameters (maybe it should?). Either way, we add a cheeky method</span>
-<span class="sd">    to the tellurium interface to roadrunner to return the names</span>
-<span class="sd">    of the parameters we want to fit</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;k2&quot;</span><span class="p">,</span> <span class="s2">&quot;k3&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;v_0&quot;</span><span class="p">,</span> <span class="s2">&quot;ra_0&quot;</span><span class="p">,</span> <span class="s2">&quot;kf_0&quot;</span><span class="p">,</span> <span class="s2">&quot;kr_0&quot;</span><span class="p">,</span> <span class="s2">&quot;Kma_0&quot;</span><span class="p">,</span> <span class="s2">&quot;Kms_0&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmp_0&quot;</span><span class="p">,</span> <span class="s2">&quot;wa_0&quot;</span><span class="p">,</span> <span class="s2">&quot;ms_0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mp_0&quot;</span><span class="p">,</span> <span class="s2">&quot;v_1&quot;</span><span class="p">,</span> <span class="s2">&quot;ri_1&quot;</span><span class="p">,</span> <span class="s2">&quot;kf_1&quot;</span><span class="p">,</span> <span class="s2">&quot;kr_1&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmi_1&quot;</span><span class="p">,</span> <span class="s2">&quot;Kms_1&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmp_1&quot;</span><span class="p">,</span> <span class="s2">&quot;wi_1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ms_1&quot;</span><span class="p">,</span> <span class="s2">&quot;mp_1&quot;</span><span class="p">,</span> <span class="s2">&quot;v_2&quot;</span><span class="p">,</span> <span class="s2">&quot;ri1_2&quot;</span><span class="p">,</span> <span class="s2">&quot;ri2_2&quot;</span><span class="p">,</span> <span class="s2">&quot;ri3_2&quot;</span><span class="p">,</span> <span class="s2">&quot;kf_2&quot;</span><span class="p">,</span> <span class="s2">&quot;kr_2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Kmi1_2&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmi2_2&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmi3_2&quot;</span><span class="p">,</span> <span class="s2">&quot;Kms_2&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmp_2&quot;</span><span class="p">,</span> <span class="s2">&quot;wi1_2&quot;</span><span class="p">,</span> <span class="s2">&quot;wi2_2&quot;</span><span class="p">,</span> <span class="s2">&quot;wi3_2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ms_2&quot;</span><span class="p">,</span> <span class="s2">&quot;mp_2&quot;</span><span class="p">,</span> <span class="s2">&quot;v_3&quot;</span><span class="p">,</span> <span class="s2">&quot;kf_3&quot;</span><span class="p">,</span> <span class="s2">&quot;kr_3&quot;</span><span class="p">,</span> <span class="s2">&quot;Kms_3&quot;</span><span class="p">,</span> <span class="s2">&quot;Kmp_3&quot;</span><span class="p">,</span> <span class="s2">&quot;ms_3&quot;</span><span class="p">,</span> <span class="s2">&quot;mp_3&quot;</span><span class="p">]</span>
 
 
-<span class="c1"># assign, and now freeParameters is callable bound to ExtendedRoadrunner types</span>
 <span class="n">ExtendedRoadRunner</span><span class="o">.</span><span class="n">freeParameters</span> <span class="o">=</span> <span class="n">freeParameters</span>
 
-<span class="c1">#####################################################################################3</span>
-<span class="c1">#   model and data generation</span>
-<span class="c1">#</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">loada</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    function Fi(v, ri, kf, kr, i, s, p, Kmi, Kms, Kmp, wi, ms, mp)</span>
+<span class="s2">        ((ri+(1-ri)*(1/(1+i/Kmi)))^wi)*(kf*(s/Kms)^ms-kr*(p/Kmp)^mp)/((1+(s/Kms))^ms+(1+(p/Kmp))^mp-1)</span>
+<span class="s2">    end</span>
+<span class="s2">    function F0(v, kf, kr, s, p, Kms, Kmp, ms, mp)</span>
+<span class="s2">        (kf*(s/Kms)^ms-kr*(p/Kmp)^mp)/((1+(s/Kms))^ms+(1+(p/Kmp))^mp-1)</span>
+<span class="s2">    end</span>
+<span class="s2">    function Fa(v, ra, kf, kr, a, s, p, Kma, Kms, Kmp, wa, ms, mp)</span>
+<span class="s2">        ((ra+(1-ra)*((a/Kma)/(1+a/Kma)))^wa)*(kf*(s/Kms)^ms-kr*(p/Kmp)^mp)/((1+(s/Kms))^ms+(1+(p/Kmp))^mp-1)</span>
+<span class="s2">    end</span>
+<span class="s2">    function Fiii(v, ri1, ri2, ri3, kf, kr, i1, i2, i3, s, p, Kmi1, Kmi2, Kmi3, Kms, Kmp, wi1, wi2, wi3, ms, mp)</span>
+<span class="s2">        ((ri1+(1-ri1)*(1/(1+i1/Kmi1)))^wi1) * ((ri2+(1-ri2)*(1/(1+i2/Kmi2)))^wi2) * ((ri3+(1-ri3)*(1/(1+i3/Kmi3)))^wi3) * (kf*(s/Kms)^ms-kr*(p/Kmp)^mp)/((1+(s/Kms))^ms+(1+(p/Kmp))^mp-1)</span>
+<span class="s2">    end</span>
+<span class="s2">    </span>
+<span class="s2">    model modular_EGFR_current_128()</span>
+<span class="s2">    </span>
+<span class="s2">    </span>
+<span class="s2">    // Reactions</span>
+<span class="s2">    FreeLigand: -&gt; L; Fa(v_0, ra_0, kf_0, kr_0, Lp, E, L, Kma_0, Kms_0, Kmp_0, wa_0, ms_0, mp_0);</span>
+<span class="s2">    Phosphotyrosine: -&gt; P; Fi(v_1, ri_1, kf_1, kr_1, Mig6, L, P, Kmi_1, Kms_1, Kmp_1, wi_1, ms_1, mp_1);</span>
+<span class="s2">    Ras: -&gt; R; Fiii(v_2, ri1_2, ri2_2, ri3_2, kf_2, kr_2, Spry2, P, E, P, R, Kmi1_2, Kmi2_2, Kmi3_2, Kms_2, Kmp_2, wi1_2, wi2_2, wi3_2, ms_2, mp_2);</span>
+<span class="s2">    Erk: -&gt; E; F0(v_3, kf_3, kr_3, R, E, Kms_3, Kmp_3, ms_3, mp_3);</span>
+<span class="s2">    </span>
+<span class="s2">    // Species IVs</span>
+<span class="s2">    Lp = 100;</span>
+<span class="s2">    E = 0;</span>
+<span class="s2">    L = 1000;</span>
+<span class="s2">    Mig6 = 100;</span>
+<span class="s2">    P = 0;</span>
+<span class="s2">    Spry2 = 10000;</span>
+<span class="s2">    R = 0;</span>
+<span class="s2">    </span>
+<span class="s2">    // Parameter values</span>
+<span class="s2">    v_0 = 1;</span>
+<span class="s2">    ra_0 = 1;</span>
+<span class="s2">    kf_0 = 1;</span>
+<span class="s2">    kr_0 = 1;</span>
+<span class="s2">    Kma_0 = 1;</span>
+<span class="s2">    Kms_0 = 1;</span>
+<span class="s2">    Kmp_0 = 1;</span>
+<span class="s2">    wa_0 = 1;</span>
+<span class="s2">    ms_0 = 1;</span>
+<span class="s2">    mp_0 = 1;</span>
+<span class="s2">    v_1 = 1;</span>
+<span class="s2">    ri_1 = 1;</span>
+<span class="s2">    kf_1 = 1;</span>
+<span class="s2">    kr_1 = 1;</span>
+<span class="s2">    Kmi_1 = 1;</span>
+<span class="s2">    Kms_1 = 1;</span>
+<span class="s2">    Kmp_1 = 1;</span>
+<span class="s2">    wi_1 = 1;</span>
+<span class="s2">    ms_1 = 1;</span>
+<span class="s2">    mp_1 = 1;</span>
+<span class="s2">    v_2 = 1;</span>
+<span class="s2">    ri1_2 = 1;</span>
+<span class="s2">    ri2_2 = 1;</span>
+<span class="s2">    ri3_2 = 1;</span>
+<span class="s2">    kf_2 = 1;</span>
+<span class="s2">    kr_2 = 1;</span>
+<span class="s2">    Kmi1_2 = 1;</span>
+<span class="s2">    Kmi2_2 = 1;</span>
+<span class="s2">    Kmi3_2 = 1;</span>
+<span class="s2">    Kms_2 = 1;</span>
+<span class="s2">    Kmp_2 = 1;</span>
+<span class="s2">    wi1_2 = 1;</span>
+<span class="s2">    wi2_2 = 1;</span>
+<span class="s2">    wi3_2 = 1;</span>
+<span class="s2">    ms_2 = 1;</span>
+<span class="s2">    mp_2 = 1;</span>
+<span class="s2">    v_3 = 1;</span>
+<span class="s2">    kf_3 = 1;</span>
+<span class="s2">    kr_3 = 1;</span>
+<span class="s2">    Kms_3 = 1;</span>
+<span class="s2">    Kmp_3 = 1;</span>
+<span class="s2">    ms_3 = 1;</span>
+<span class="s2">    mp_3 = 1;</span>
+<span class="s2">    </span>
+<span class="s2">    end</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
 
-<span class="c1"># globally scoped model</span>
-<span class="n">ANTIMONY_STRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">   S1 -&gt; S2; k1*S1;</span>
-<span class="s2">   S2 -&gt; S3; k2*S2;</span>
-<span class="s2">   S3 -&gt; S1; k3*S3;</span>
-<span class="s2">   S1 = 1; S2 = 0; S3 = 0;</span>
-<span class="s2">   k1 = 0.15; k2 = 0.45; k3 = 15;</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">loada</span><span class="p">(</span><span class="n">ANTIMONY_STRING</span><span class="p">)</span>
+<span class="n">dataValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;time,L,E,P,R</span>
+<span class="s2">0,1000,0,0,0</span>
+<span class="s2">100,887.381,809.746,156.585,2990.51</span>
+<span class="s2">200,777.382,1651.78,143.552,2731.75</span>
+<span class="s2">300,678.584,2462.54,131.11,2485.62</span>
+<span class="s2">400,607.807,3018.03,121.584,2297.79</span>
+<span class="s2">500,567.493,3204.74,115.929,2186.58</span>
+<span class="s2">600,545.099,3229.01,112.75,2124.17</span>
+<span class="s2">700,531.456,3202.71,110.814,2086.18</span>
+<span class="s2">800,522.145,3164.21,109.495,2060.33</span>
+<span class="s2">900,515.219,3126.44,108.515,2041.13</span>
+<span class="s2">1000,509.802,3093.29,107.748,2026.11&quot;&quot;&quot;</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">skip_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dataValues_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dataValues</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">])</span>
+<span class="n">dataValues_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># CW get rid of time column for convenience</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">dataValues</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># copy for later</span>
+<span class="n">dataValues</span> <span class="o">=</span> <span class="n">dataValues</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
 
-<span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="nd">@SRES</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()))</span>
+<span class="k">def</span> <span class="nf">cost_fun</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+    <span class="c1"># Reset the model before</span>
     <span class="n">r</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="c1"># set the new parameter values</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">)):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="c1"># print(&quot;param: val: &quot;, param, &quot;:&quot;, val, &quot;,&quot;)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="c1"># print(&quot;\n&quot;)</span>
+    <span class="c1"># compute cost.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">dataValues</span> <span class="o">-</span> <span class="n">sim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cost</span>
+
+
+<span class="k">def</span> <span class="nf">simulate_model</span><span class="p">(</span><span class="n">withTheseParameters</span><span class="p">):</span>
+    <span class="c1"># set the new parameter values</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">withTheseParameters</span><span class="p">)):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">withTheseParameters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">colnames</span><span class="p">)</span>
+
+
+<span class="nd">@SRES</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()))</span>
+<span class="k">def</span> <span class="nf">cost_fun_mean_squared</span><span class="p">(</span><span class="n">parameters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;cost function where each dataset is normalized by mean squared of that dataset&quot;&quot;&quot;</span>
+    <span class="c1"># Reset the model before</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="c1"># set the new parameter values</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">)):</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="c1"># print(&quot;\n&quot;)</span>
+    <span class="c1"># compute cost.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">rss</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataValues</span> <span class="o">-</span> <span class="n">sim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">mean_of_cols</span> <span class="o">=</span> <span class="n">dataValues</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rss</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">rss</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">/=</span> <span class="p">(</span><span class="n">mean_of_cols</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">rss</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cost</span>
+
+
+<span class="k">def</span> <span class="nf">do_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">popsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">starting_set</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">sres</span> <span class="o">=</span> <span class="n">SRES</span><span class="p">(</span>
+        <span class="n">cost_function</span><span class="o">=</span><span class="n">cost_fun_mean_squared</span><span class="p">,</span>
+        <span class="n">popsize</span><span class="o">=</span><span class="n">popsize</span><span class="p">,</span>
+        <span class="n">numGenerations</span><span class="o">=</span><span class="n">ngen</span><span class="p">,</span>
+        <span class="n">startingValues</span><span class="o">=</span><span class="n">starting_set</span> <span class="k">if</span> <span class="n">starting_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">())),</span>
+        <span class="n">lb</span><span class="o">=</span><span class="p">[</span><span class="mf">0.01</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()),</span>
+        <span class="n">ub</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()),</span>
+        <span class="n">childrate</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sres</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">(),</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;bestSolution&quot;</span><span class="p">]))</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
-    <span class="c1"># Simulate &quot;experimental&quot; data</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span>
-    <span class="n">x_data</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>  <span class="c1"># only time</span>
-    <span class="n">y_data</span> <span class="o">=</span> <span class="n">m</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># remove time</span>
-    <span class="k">return</span> <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">timeCourseSelections</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">])</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">colnames</span><span class="p">)</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-
-<span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">selections</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">k1</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">k2</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span> <span class="n">k3</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-
-<span class="c1"># Add random noise to synthetic data</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">)):</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
-    <span class="n">y_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">t</span>
-
-
-<span class="c1">##############################################################</span>
-<span class="c1">#   Configure the optimization</span>
-<span class="c1">#</span>
-
-<span class="nd">@SRES</span><span class="o">.</span><span class="n">COST_FUNCTION_CALLBACK</span>
-<span class="k">def</span> <span class="nf">cost_fun</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">fitness</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Brief</span>
-<span class="sd">    -----</span>
-<span class="sd">    Compute difference between experimental dataset and model simulation with candidate parameters.</span>
-<span class="sd">    This cost function is user defined and used as input to the main SRES algorithm. The input</span>
-<span class="sd">    to this function is always [parameters, fitness and constraints]. You do not need to worry</span>
-<span class="sd">    about generating candidate parameters as they are generated by the underlying algorithm. You do</span>
-<span class="sd">    however have to worry about updating the fitness value, which you do like this:</span>
-
-<span class="sd">        fitness.contents.value = calculated_cost</span>
-
-<span class="sd">    Where calculated_cost is a float computed by your function. Note, that even though</span>
-<span class="sd">    we haven&#39;t used the constraints argument in this cost function, we still need to pass it in</span>
-<span class="sd">    as an input parameter.</span>
-
-<span class="sd">    Details</span>
-<span class="sd">    -------</span>
-<span class="sd">    The underlying SRES C code requires as input a function pointer to a cost function</span>
-<span class="sd">    that has the following signature:</span>
-
-<span class="sd">        typedef void(*ESfcnFG)(double *, double *, double *);</span>
-
-<span class="sd">    We can create a cost function in Python to pass to C by using the</span>
-<span class="sd">    :py:class:`SRES.COST_FUNCTION_CALLBACK` decorator. Since the C end is</span>
-<span class="sd">    expecting a function with three double pointer types, we must have</span>
-<span class="sd">    as arguments to our cost function, three arguments.</span>
-
-<span class="sd">    When coding the cost function, you need to remember that the types of</span>
-<span class="sd">    parameter, fitness and constraints are ctypes pointers to double</span>
-<span class="sd">    arrays in the case of the parameter and constraints argument and</span>
-<span class="sd">    a pointer to a double in the case of fitness. To do computation</span>
-<span class="sd">    with these types you need the value that the pointer points to, not</span>
-<span class="sd">    the pointer. To get these, you use:</span>
-<span class="sd">        &gt;&gt;&gt; parameters.contents[0]</span>
-<span class="sd">    In the case of pointer to a double array or</span>
-<span class="sd">        &gt;&gt;&gt; fitness.contents.value</span>
-<span class="sd">    in the case of a pointer to a double.</span>
-
-<span class="sd">    Args</span>
-<span class="sd">    ----</span>
-<span class="sd">    parameters: A list of candidate parameters with the same size as the</span>
-<span class="sd">                dimensionality of your defined optimization problem.</span>
-<span class="sd">    fitness:    This is the value that you must compute and assign.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sel</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span>
-        <span class="o">**</span><span class="nb">dict</span><span class="p">(</span>
-            <span class="nb">zip</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">(),</span> <span class="n">parameters</span><span class="o">.</span><span class="n">contents</span><span class="p">))</span>
-    <span class="p">)</span>
-    <span class="c1"># note, you&#39;ll need two np.sums when &gt;1 dataset</span>
-    <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_data</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="c1"># update fitness. This step is crucial and evey cost function</span>
-    <span class="c1"># must have this line</span>
-    <span class="n">fitness</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">cost</span>
-
-
-<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">objective_val</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">y_sim</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">colours</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">]</span>
     <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">objective_val</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">y_sim</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">sel</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sel</span><span class="p">)):</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">sel</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_sim&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colours</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_exp&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colours</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">_sim&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colours</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dataValues_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dataValues_df</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">_exp&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+                     <span class="n">color</span><span class="o">=</span><span class="n">colours</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
     <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
     <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;AU&quot;</span><span class="p">)</span>
     <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time step&quot;</span><span class="p">)</span>
     <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Best fits&quot;</span><span class="p">)</span>
 
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">objective_val</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">objective_val</span><span class="p">),</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+    <span class="n">hof</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;hallOfFame&quot;</span><span class="p">]</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hof</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hof</span><span class="p">),</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
     <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;log10 RSS&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Generation&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Trace&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Update Number&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Hall Of Fame&quot;</span><span class="p">)</span>
     <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;LargeModel.png&quot;</span><span class="p">),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">do_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-    <span class="n">sres</span> <span class="o">=</span> <span class="n">SRES</span><span class="p">(</span>
-        <span class="n">cost_function</span><span class="o">=</span><span class="n">cost_fun</span><span class="p">,</span>
-        <span class="n">ngen</span><span class="o">=</span><span class="n">ngen</span><span class="p">,</span>
-        <span class="n">lb</span><span class="o">=</span><span class="p">[</span><span class="mf">0.001</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()),</span>
-        <span class="n">ub</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">()),</span>
-        <span class="n">parent_popsize</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-        <span class="n">child_popsize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">gamma</span><span class="o">=</span><span class="mf">0.5</span>
-    <span class="p">)</span>
+<span class="k">def</span> <span class="nf">repeated_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">popsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="c1"># do the first outside the loop to initialize the values</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">()</span>
+    <span class="n">best_objective_val</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;bestFitness&quot;</span><span class="p">]</span>  <span class="c1"># the best value from best_values</span>
 
-    <span class="n">objective_val</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
-        <span class="n">objective_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">sres</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="mf">0.45</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="p">)</span>
+    <span class="n">best_results</span> <span class="o">=</span> <span class="n">results</span>
 
-    <span class="n">best</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">freeParameters</span><span class="p">(),</span> <span class="n">sres</span><span class="o">.</span><span class="n">getBestParameters</span><span class="p">())</span>
-    <span class="p">)</span>
-    <span class="n">x_sim</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="o">**</span><span class="n">best</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">objective_val</span><span class="p">,</span> <span class="n">x_sim</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">best</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># run an estimation</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="o">=</span><span class="n">ngen</span><span class="p">,</span> <span class="n">popsize</span><span class="o">=</span><span class="n">popsize</span><span class="p">)</span>
+        <span class="c1"># if the best value for the current run is better than all previous runs</span>
+        <span class="c1"># we update the best* variables</span>
+        <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;bestFitness&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">best_objective_val</span><span class="p">:</span>
+            <span class="n">best_results</span> <span class="o">=</span> <span class="n">results</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;run:&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span>
+              <span class="s2">&quot;, best objective function value: &quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;bestFitness&quot;</span><span class="p">],</span>
+              <span class="s2">&quot;, estimated parameter values: &quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;bestSolution&quot;</span><span class="p">]</span>
+              <span class="p">)</span>
+    <span class="n">plot_waterfall</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;hallOfFame&quot;</span><span class="p">])</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">best_results</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">best_results</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">plot_waterfall</span><span class="p">(</span><span class="n">best_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">stdevs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
-    <span class="n">best_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">best_values</span><span class="p">)</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best_values</span><span class="p">)),</span> <span class="n">best_values</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;RSS&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Ranked best values&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Waterfall plot (n=</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best_values</span><span class="p">)))</span>
-    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)),</span> <span class="n">stdevs</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;stdev&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Successive iterations&quot;</span><span class="p">)</span>
-    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stdev of best RSS</span><span class="se">\n</span><span class="s2">(n=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">plot_waterfall</span><span class="p">(</span><span class="n">best_fitness_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+    <span class="n">best_fitness_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">best_fitness_values</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best_fitness_values</span><span class="p">)),</span> <span class="n">best_fitness_values</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;RSS&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Ranked best fitness values&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waterfall plot (n=</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">best_fitness_values</span><span class="p">)))</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">despine</span><span class="p">(</span><span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;waterfall.png&quot;</span><span class="p">),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span>
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">repeated_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
-    <span class="c1"># do the first outside the loop to initialize the values</span>
-    <span class="n">objective_values_for_this_run</span><span class="p">,</span> <span class="n">x_sim</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">best_parameters</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">()</span>
-    <span class="n">best_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">objective_values_for_this_run</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># list to store the best values for each PE run</span>
-    <span class="n">best_objective_val</span> <span class="o">=</span> <span class="n">objective_values_for_this_run</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># the best value from best_values</span>
-    <span class="n">best_y_sim</span> <span class="o">=</span> <span class="n">y_sim</span>  <span class="c1"># the best simulation data from the idx of best value</span>
-    <span class="n">std_devs</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># For collecting running stdev</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">time</span>
 
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="c1"># run an estimation</span>
-        <span class="n">objective_values_for_this_run</span><span class="p">,</span> <span class="n">x_sim</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">best_parameters</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="o">=</span><span class="n">ngen</span><span class="p">)</span>
-        <span class="n">best_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">objective_values_for_this_run</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="c1"># if the best value for the current run is better than all previous runs</span>
-        <span class="c1"># we update the best* variables</span>
-        <span class="k">if</span> <span class="n">objective_values_for_this_run</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="nb">min</span><span class="p">(</span><span class="n">best_values</span><span class="p">):</span>
-            <span class="n">best_objective_val</span> <span class="o">=</span> <span class="n">objective_values_for_this_run</span>
-            <span class="n">best_y_sim</span> <span class="o">=</span> <span class="n">y_sim</span>
-        <span class="n">current_stdev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">best_values</span><span class="p">)</span>
-        <span class="n">std_devs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_stdev</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;run:&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span>
-              <span class="s2">&quot;, best objective function value: &quot;</span><span class="p">,</span> <span class="n">objective_values_for_this_run</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-              <span class="s2">&quot;, current stdev of best values so far:&quot;</span><span class="p">,</span> <span class="n">current_stdev</span><span class="p">,</span>
-              <span class="s2">&quot;, estimated parameter values: &quot;</span><span class="p">,</span> <span class="n">best_parameters</span>
-              <span class="p">)</span>
-    <span class="n">plot_waterfall</span><span class="p">(</span><span class="n">best_values</span><span class="p">,</span> <span class="n">std_devs</span><span class="p">)</span>
-    <span class="n">plot</span><span class="p">(</span><span class="n">best_values</span><span class="p">,</span> <span class="n">best_y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="c1"># sns.set_context(&quot;talk&quot;)</span>
+    <span class="n">NGEN</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">POPSIZE</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># len(r.freeParameters()) * 10</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">20</span>
 
-    <span class="c1"># number of generations for a single parameter estimation</span>
-    <span class="n">NGEN</span> <span class="o">=</span> <span class="mi">50</span>
-    <span class="c1"># number of parameter estimations</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="mi">50</span>
-    <span class="n">DO_SINGLE_ESTIMATION</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">DO_MULTIPLE_ESTIMATIONS</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">DO_PARAMETER_ESTIMATION</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">DO_MULTIPLE_PARAMETER_ESTIMATIONS</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">if</span> <span class="n">DO_SINGLE_ESTIMATION</span><span class="p">:</span>
-        <span class="n">best</span><span class="p">,</span> <span class="n">x_sim</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">best_parameters</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="o">=</span><span class="n">NGEN</span><span class="p">)</span>
-        <span class="n">plot</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="n">y_sim</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">DO_PARAMETER_ESTIMATION</span><span class="p">:</span>
+        <span class="n">starting_set</span> <span class="o">=</span> <span class="p">[</span><span class="mf">7.02227063</span><span class="p">,</span> <span class="mf">7.99316053</span><span class="p">,</span> <span class="mf">4.80914422</span><span class="p">,</span> <span class="mf">2.60842446</span><span class="p">,</span> <span class="mf">0.03399503</span><span class="p">,</span>
+                        <span class="mf">6.39003928</span><span class="p">,</span> <span class="mf">9.77369077</span><span class="p">,</span> <span class="mf">5.21292781</span><span class="p">,</span> <span class="mf">3.94874179</span><span class="p">,</span> <span class="mf">6.56794961</span><span class="p">,</span>
+                        <span class="mf">4.82594616</span><span class="p">,</span> <span class="mf">5.6729108</span><span class="p">,</span> <span class="mf">6.00687204</span><span class="p">,</span> <span class="mf">0.67424649</span><span class="p">,</span> <span class="mf">5.09559615</span><span class="p">,</span>
+                        <span class="mf">8.79193326</span><span class="p">,</span> <span class="mf">9.46876033</span><span class="p">,</span> <span class="mf">6.81484818</span><span class="p">,</span> <span class="mf">3.77127024</span><span class="p">,</span> <span class="mf">5.0410533</span><span class="p">,</span>
+                        <span class="mf">5.0316706</span><span class="p">,</span> <span class="mf">8.5122072</span><span class="p">,</span> <span class="mf">7.38434511</span><span class="p">,</span> <span class="mf">5.13765973</span><span class="p">,</span> <span class="mf">7.05435226</span><span class="p">,</span>
+                        <span class="mf">7.87489228</span><span class="p">,</span> <span class="mf">3.28569237</span><span class="p">,</span> <span class="mf">5.76781861</span><span class="p">,</span> <span class="mf">3.98673416</span><span class="p">,</span> <span class="mf">1.50935585</span><span class="p">,</span>
+                        <span class="mf">8.71267203</span><span class="p">,</span> <span class="mf">5.7856511</span><span class="p">,</span> <span class="mf">5.63214039</span><span class="p">,</span> <span class="mf">6.07861862</span><span class="p">,</span> <span class="mf">5.39103686</span><span class="p">,</span>
+                        <span class="mf">5.13700395</span><span class="p">,</span> <span class="mf">5.216952</span><span class="p">,</span> <span class="mf">7.59655661</span><span class="p">,</span> <span class="mf">1.53969082</span><span class="p">,</span> <span class="mf">3.09525245</span><span class="p">,</span>
+                        <span class="mf">6.82843622</span><span class="p">,</span> <span class="mf">3.68719038</span><span class="p">,</span> <span class="mf">3.81346061</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">do_estimation</span><span class="p">(</span><span class="n">NGEN</span><span class="p">,</span> <span class="n">POPSIZE</span><span class="p">,</span> <span class="n">starting_set</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">DO_MULTIPLE_ESTIMATIONS</span><span class="p">:</span>
-        <span class="n">repeated_estimation</span><span class="p">(</span><span class="n">ngen</span><span class="o">=</span><span class="n">NGEN</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">plot</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">DO_MULTIPLE_PARAMETER_ESTIMATIONS</span><span class="p">:</span>
+        <span class="n">repeated_estimation</span><span class="p">(</span><span class="n">NGEN</span><span class="p">,</span> <span class="n">POPSIZE</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;took &quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+    <span class="c1"># todo count function evals and nb failed</span>
 </pre></div>
 </div>
 </div>
