@@ -1,6 +1,6 @@
 import numpy as np
 import tellurium as te
-from sres import SRES
+from sresFromMoonfit import SRES
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
 import matplotlib.pyplot as plt

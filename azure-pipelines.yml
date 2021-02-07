@@ -367,7 +367,7 @@ stages:
             cd $(Pipeline.Workspace)/SRES-ManyLinux
             $(PythonExecutable) setup.py bdist_wheel
             $(PipExecutable) install "$(pwd)/dist/$(ls dist)"
-            export LD_LIBRARY_PATH=$(PythonLibDir)
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(PythonLibDir)"
             $(PythonExecutable) -c "import sres"
         - task: CopyFiles@2
           inputs:
