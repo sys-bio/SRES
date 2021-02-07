@@ -1,13 +1,13 @@
+import os
 from typing import List
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import roadrunner
 import seaborn as sns
 import tellurium as te
-import pandas as pd
-import os
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
 from csres import SRES
@@ -141,6 +141,16 @@ def cost_fun(parameters):
     return cost
 
 
+def simulate_model(withTheseParameters):
+    # set the new parameter values
+    for i in range(len(withTheseParameters)):
+        param = r.freeParameters()[i]
+        val = withTheseParameters[i]
+        setattr(r, param, val)
+    m = r.simulate(0, 1000, 11)
+    return pd.DataFrame(m, columns=m.colnames)
+
+
 @SRES.callback(len(r.freeParameters()))
 def cost_fun_mean_squared(parameters):
     # Reset the model before
@@ -149,8 +159,7 @@ def cost_fun_mean_squared(parameters):
     # set the new parameter values
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
-        val = round(parameters.contents[i], 6)
-        # print("param: val: ", param, ":", val, ",")
+        val = parameters.contents[i]
         setattr(r, param, val)
 
     # print("\n")
@@ -170,7 +179,7 @@ def cost_fun_mean_squared(parameters):
     return cost
 
 
-def do_estimation(ngen: int = 50, popsize: int = 50, starting_set = None):
+def do_estimation(ngen: int = 50, popsize: int = 50, starting_set=None):
     sres = SRES(
         cost_function=cost_fun_mean_squared,
         popsize=popsize,
@@ -181,11 +190,7 @@ def do_estimation(ngen: int = 50, popsize: int = 50, starting_set = None):
         childrate=7,
     )
 
-    results = sres.fit()
-
-    for k, v in results.items():
-        print(k, v)
-    return results
+    return sres.fit()
 
 
 def plot(results) -> None:
@@ -201,7 +206,8 @@ def plot(results) -> None:
     fig, axes = plt.subplots(nrows=1, ncols=2)
     for i, var in enumerate(data.columns):
         axes[0].plot(data.index, data[var], label=f"{var}_sim", ls="--", color=colours[i])
-        axes[0].plot(dataValues_df.index, dataValues_df[var], label=f"{var}_exp", ls="None", marker='.', color=colours[i])
+        axes[0].plot(dataValues_df.index, dataValues_df[var], label=f"{var}_exp", ls="None", marker='.',
+                     color=colours[i])
     axes[0].legend(loc=(-0.7, 0.1))
     axes[0].set_ylabel("AU")
     axes[0].set_xlabel("Time step")
@@ -210,11 +216,48 @@ def plot(results) -> None:
     hof = results["hallOfFame"]
     axes[1].plot(range(len(hof)), np.log10(hof), ls='-', marker='o')
     axes[1].set_ylabel("log10 RSS")
-    axes[1].set_xlabel("Generation")
-    axes[1].set_title("Trace")
+    axes[1].set_xlabel("Update Number")
+    axes[1].set_title("Hall Of Fame")
     sns.despine(ax=axes[0], top=True, right=True)
     sns.despine(ax=axes[1], top=True, right=True)
     plt.savefig(os.path.join(os.path.dirname(__file__), "LargeModel.png"), bbox_inches='tight', dpi=200)
+
+
+def repeated_estimation(ngen: int = 50, popsize: int = 50, n: int = 10):
+    # do the first outside the loop to initialize the values
+    results = do_estimation()
+    best_objective_val = results["bestFitness"]  # the best value from best_values
+
+    best_results = results
+
+    for i in range(n - 1):
+        # run an estimation
+        results = do_estimation(ngen=ngen, popsize=popsize)
+        # if the best value for the current run is better than all previous runs
+        # we update the best* variables
+        if results["bestFitness"] <= best_objective_val:
+            best_results = results
+        print("run:", i,
+              ", best objective function value: ", results["bestFitness"],
+              ", estimated parameter values: ", results["bestSolution"]
+              )
+    plot_waterfall(results["hallOfFame"])
+    plot(best_results)
+    print(best_results)
+
+
+def plot_waterfall(best_fitness_values: List[float]):
+    best_fitness_values = sorted(best_fitness_values)
+    fig = plt.figure()
+    plt.plot(range(len(best_fitness_values)), best_fitness_values, marker='.', ls="None")
+    plt.ylabel("RSS")
+    plt.xlabel("Ranked best fitness values")
+    plt.title("Waterfall plot (n={})".format(len(best_fitness_values)))
+    sns.despine(fig=fig, top=True, right=True)
+
+    plt.savefig(os.path.join(
+        os.path.dirname(__file__), "waterfall.png"), bbox_inches="tight", dpi=200
+    )
 
 
 if __name__ == "__main__":
@@ -222,25 +265,29 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    ngen = 50
-    popsize = len(r.freeParameters()) * 10
+    NGEN = 50
+    POPSIZE = 100# len(r.freeParameters()) * 10
+    N = 20
 
-    # todo is ngen actually doing anything. Simulations that change this
-    #   figure seem very similar.
+    DO_PARAMETER_ESTIMATION = True
+    DO_MULTIPLE_PARAMETER_ESTIMATIONS = False
 
-    best_set = [
-        9.55115313, 0.17003503, 5.65980706, 0.62275698, 2.61161608, 2.42138129,
-        0.96791146, 2.08587429, 0.75860228, 9.92746723, 0.57231008, 1.49119878,
-        0.36182244, 1.72782791, 0.41200846, 3.28571469, 0.93447848, 2.68463832,
-        3.9629908, 7.90269899, 4.85671395, 3.55415979, 1.24501534, 6.36069714,
-        6.85874704, 1.1541854, 1.09199121, 0.95634204, 0.94469065, 0.09810687,
-        2.45212416, 2.65307981, 1.11654523, 1.08075884, 4.29410456, 3.24124077,
-        0.4182004, 8.88402939, 0.66741725, 1.42451539, 1.30466651, 7.10731594,
-        6.93352265]
+    if DO_PARAMETER_ESTIMATION:
+        starting_set = [7.02227063, 7.99316053, 4.80914422, 2.60842446, 0.03399503,
+                        6.39003928, 9.77369077, 5.21292781, 3.94874179, 6.56794961,
+                        4.82594616, 5.6729108, 6.00687204, 0.67424649, 5.09559615,
+                        8.79193326, 9.46876033, 6.81484818, 3.77127024, 5.0410533,
+                        5.0316706, 8.5122072, 7.38434511, 5.13765973, 7.05435226,
+                        7.87489228, 3.28569237, 5.76781861, 3.98673416, 1.50935585,
+                        8.71267203, 5.7856511, 5.63214039, 6.07861862, 5.39103686,
+                        5.13700395, 5.216952, 7.59655661, 1.53969082, 3.09525245,
+                        6.82843622, 3.68719038, 3.81346061]
+        results = do_estimation(NGEN, POPSIZE, starting_set)
 
-    results = do_estimation(ngen, popsize, best_set)
+        plot(results)
 
-    plot(results)
+    if DO_MULTIPLE_PARAMETER_ESTIMATIONS:
+        repeated_estimation(NGEN, POPSIZE, N)
 
     print("took ", time.time() - start, "seconds")
     # todo count function evals and nb failed
