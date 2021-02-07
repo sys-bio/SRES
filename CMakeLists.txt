@@ -137,7 +137,7 @@ install(
 install(
         FILES
         sres/test/__init__.py
-        sres/test/BealeFunctionSRES.py
+        sres/test/BealeProblem.py
         sres/test/LargeRRModel.py
         sres/test/RoadrunnerProblem.py
         DESTINATION site-packages/sres/test
