@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.17)
 # Set version.
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
-set(VERSION_MICRO 0)
+set(VERSION_MICRO 1)
 
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO})
 
