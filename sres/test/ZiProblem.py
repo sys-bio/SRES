@@ -8,7 +8,7 @@ import seaborn as sns
 import tellurium as te
 from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
 
-from csres import SRES
+from sres import SRES
 
 # roadrunner.Logger.disableConsoleLogging()
 # roadrunner.Logger.setLevel(roadrunner.Logger.LOG_CRITICAL)

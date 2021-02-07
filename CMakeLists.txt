@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.17)
 
 # Set version.
-set(VERSION_MAJOR 0)
+set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
-set(VERSION_MICRO 3)
+set(VERSION_MICRO 0)
 
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO})
 
@@ -101,15 +101,14 @@ configure_file(
 
 add_subdirectory(external)
 
-add_subdirectory(csres)
 add_subdirectory(sres)
+#add_subdirectory(sres)
 
 
 option(COPY_BINARY_TO_PYTHON_DIR " when true, find the SRES binary and copy to sres python folder" off)
 
 if (COPY_BINARY_TO_PYTHON_DIR)
-    install(TARGETS SRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
-    install(TARGETS CCSRES DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/csres")
+    install(TARGETS SRESC DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/sres")
 endif ()
 
 find_package(Python)
@@ -132,14 +131,16 @@ install(
         FILES
         sres/__init__.py
         sres/sres.py
-        $<TARGET_FILE:SRES>
+        $<TARGET_FILE:SRESC>
         DESTINATION
         site-packages/sres
 )
 install(
         FILES
         sres/test/__init__.py
-        sres/test/GaussianProblem.py
+        sres/test/BealeFunctionSRES.py
+        sres/test/LargeRRModel.py
+        sres/test/SynC.csv
         sres/test/RoadrunnerProblem.py
         DESTINATION site-packages/sres/test
 )

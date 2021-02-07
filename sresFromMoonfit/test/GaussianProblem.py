@@ -1,4 +1,4 @@
-from sres import SRES
+from sresFromMoonfit import SRES
 import numpy as np
 
 def generateData(mu, sigma):

@@ -1,13 +1,17 @@
-import numpy as np
-import tellurium as te
-from sres import SRES
-from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib as mpl
-from typing import List, Tuple, Dict
 import os
+from typing import List, Tuple, Dict
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import tellurium as te
+from tellurium.roadrunner.extended_roadrunner import ExtendedRoadRunner
+import roadrunner
+roadrunner.Logger.disableConsoleLogging()
+roadrunner.Logger.setLevel(roadrunner.Logger.LOG_CRITICAL)
+
+from sres import SRES
 
 mpl.use("TkAgg")
 
@@ -49,14 +53,17 @@ def get_data(**params) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     for k, v in params.items():
         setattr(r, k, v)
 
-    # Simulate "experimental" data
-    m = r.simulate(0, 20, 21)
+    try :
+        # Simulate "experimental" data
+        m = r.simulate(0, 20, 21)
+    except Exception:
+        return None
     x_data = m["time"]  # only time
     y_data = m[:, 1:]  # remove time
     return x_data, y_data, r.timeCourseSelections[1:]
 
 
-x_data, y_data, selections = get_data(k1=0.15, k2=0.45, k3=0.05)
+x_data, y_data, selections = get_data()
 
 # Add random noise to synthetic data
 for i in range(0, len(y_data)):
@@ -69,7 +76,7 @@ for i in range(0, len(y_data)):
 #
 
 @SRES.callback(len(r.freeParameters()))
-def cost_fun(parameters, fitness, constraints):
+def cost_fun(parameters):
     """
     Brief
     -----
@@ -115,16 +122,17 @@ def cost_fun(parameters, fitness, constraints):
     fitness:    This is the value that you must compute and assign.
 
     """
-    x, y, sel = get_data(
+    res = get_data(
         **dict(
             zip(r.freeParameters(), parameters.contents))
     )
+    if not res:
+        return 10000000
+    x, y, sel = res
     # note, you'll need two np.sums when >1 dataset
     cost = np.sum(np.sum((y - y_data) ** 2))
 
-    # update fitness. This step is crucial and evey cost function
-    # must have this line
-    fitness.contents.value = cost
+    return cost
 
 
 def plot(objective_val: List[float], y_sim: np.ndarray, sel: List[str]) -> None:
@@ -150,28 +158,26 @@ def plot(objective_val: List[float], y_sim: np.ndarray, sel: List[str]) -> None:
 
 
 def do_estimation(ngen: int = 50, popsize: int = 50) -> Tuple[
-    List[float], np.ndarray, np.ndarray, List[str], Dict[str, float]]:
+    List[float], np.ndarray, np.ndarray, List[str], Dict[str, float], float]:
     sres = SRES(
         cost_function=cost_fun,
-        ngen=ngen,
+        popsize=popsize,
+        numGenerations=ngen,
+        startingValues=[8.3434, 6.342, 3.765] ,
         lb=[0.001] * len(r.freeParameters()),
         ub=[100] * len(r.freeParameters()),
-        parent_popsize=popsize,
-        child_popsize=popsize * 7,
-        gamma=0.5
+        childrate=7,
     )
 
-    objective_val: List[float] = []
-    for i in range(50):
-        objective_val.append(
-            sres.step(0.45, False)
-        )
-
+    results = sres.fit()
     best = dict(
-        zip(r.freeParameters(), sres.getBestParameters())
+        zip(r.freeParameters(), results["best_solution"])
     )
+    objective_val = results["best_cost"]
+    trace = results["trace"]
+
     x_sim, y_sim, sel = get_data(**best)
-    return objective_val, x_sim, y_sim, sel, best
+    return trace, x_sim, y_sim, sel, best, objective_val
 
 
 def plot_waterfall(best_values: List[float], stdevs: List[float]):
@@ -196,25 +202,25 @@ def plot_waterfall(best_values: List[float], stdevs: List[float]):
 
 def repeated_estimation(ngen: int = 50, n: int = 10):
     # do the first outside the loop to initialize the values
-    objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation()
-    best_values: List[float] = [objective_values_for_this_run[-1]]  # list to store the best values for each PE run
-    best_objective_val = objective_values_for_this_run[-1]  # the best value from best_values
+    trace, x_sim, y_sim, sel, best_parameters, best_value = do_estimation()
+    best_values: List[float] = [trace[-1]]  # list to store the best values for each PE run
+    best_objective_val = trace[-1]  # the best value from best_values
     best_y_sim = y_sim  # the best simulation data from the idx of best value
     std_devs = []  # For collecting running stdev
 
     for i in range(n - 1):
         # run an estimation
-        objective_values_for_this_run, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=ngen)
-        best_values.append(objective_values_for_this_run[-1])
+        trace, x_sim, y_sim, sel, best_parameters, best_value = do_estimation(ngen=ngen, popsize=n)
+        best_values.append(trace[-1])
         # if the best value for the current run is better than all previous runs
         # we update the best* variables
-        if objective_values_for_this_run[-1] <= min(best_values):
-            best_objective_val = objective_values_for_this_run
+        if trace[-1] <= min(best_values):
+            best_objective_val = trace
             best_y_sim = y_sim
         current_stdev = np.std(best_values)
         std_devs.append(current_stdev)
         print("run:", i,
-              ", best objective function value: ", objective_values_for_this_run[-1],
+              ", best objective function value: ", trace[-1],
               ", current stdev of best values so far:", current_stdev,
               ", estimated parameter values: ", best_parameters
               )
@@ -226,9 +232,9 @@ if __name__ == '__main__':
     # sns.set_context("talk")
 
     # number of generations for a single parameter estimation
-    NGEN = 400
+    NGEN = 15
 
-    POPSIZE = 100
+    POPSIZE = 10
 
     # number of parameter estimations
     N = 150
@@ -237,8 +243,8 @@ if __name__ == '__main__':
     DO_MULTIPLE_ESTIMATIONS = False
 
     if DO_SINGLE_ESTIMATION:
-        best, x_sim, y_sim, sel, best_parameters = do_estimation(ngen=NGEN, popsize=POPSIZE)
-        plot(best, y_sim, sel)
+        trace, x_sim, y_sim, sel, best_parameters, best_value= do_estimation(ngen=NGEN, popsize=POPSIZE)
+        plot(trace, y_sim, sel)
 
     if DO_MULTIPLE_ESTIMATIONS:
         repeated_estimation(ngen=NGEN, n=N)

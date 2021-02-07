@@ -1,2 +1,2 @@
 add_subdirectory(googletest)
-add_subdirectory(Linux2Windows)
+#add_subdirectory(Linux2Windows)

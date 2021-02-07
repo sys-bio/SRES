@@ -1,5 +1,5 @@
 import unittest
-from csres import SRES
+from sres import SRES
 
 def beale(position):
     """
