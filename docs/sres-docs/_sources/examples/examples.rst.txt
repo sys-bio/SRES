@@ -5,7 +5,7 @@ Examples
 .. toctree::
     :maxdepth: 1
 
-    GaussianProblem
+    BealeProblem
     RoadRunnerExample
 
 

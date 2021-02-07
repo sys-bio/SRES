@@ -1,4 +1,4 @@
 RoadRunner Example
 ----------------------
 
-.. literalinclude:: ../../../sres/test/RoadrunnerProblem.py
+.. literalinclude:: ../../../sres/test/LargeRRModel.py
