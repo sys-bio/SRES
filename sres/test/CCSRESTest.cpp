@@ -45,8 +45,7 @@ TEST_F(CCSRESTests, TestGetBestValue) {
     SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
-    double best;
-    SRES_getBestFitnessValue(sres, &best);
+    double best = SRES_getBestFitnessValue(sres);
     double x = 8.0722599999999995e-11;
     ASSERT_NEAR(x, best, 0.001);
     SRES_deleteSRES(sres);

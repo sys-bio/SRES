@@ -87,7 +87,7 @@ class SRES:
 
     def getBestValue(self) -> float:
         """retrieve the best fitness value after fitting"""
-        return self._getBestValue(self._obj)
+        return self._getBestFitnessValue(self._obj)
 
     def getHallOfFame(self) -> np.array:
         """returns a np.array containing the best fitnesses for each generation"""
@@ -153,7 +153,7 @@ class SRES:
     )
 
     # https://stackoverflow.com/a/13452473/3059024
-    _getBestValue = _sres.load_func(
+    _getBestFitnessValue = _sres.load_func(
         funcname="SRES_getBestFitnessValue",
         argtypes=[ct.c_int64],
         return_type=ct.c_double

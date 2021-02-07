@@ -26,7 +26,7 @@ namespace opt {
 
     double *SRES_getSolution(SRES *sres);
 
-    int SRES_getBestFitnessValue(SRES *sres, double *bestFitness);
+    double SRES_getBestFitnessValue(SRES *sres);
 
     /**
      * The returned pointer is malloc'd and must be freed with
