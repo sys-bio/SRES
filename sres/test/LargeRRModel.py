@@ -254,8 +254,8 @@ def repeated_estimation(ngen: int = 50, popsize: int = 50, n: int = 10):
               ", best objective function value: ", results["bestFitness"],
               ", estimated parameter values: ", results["bestSolution"]
               )
+        plot(best_results)
     plot_waterfall(results["hallOfFame"])
-    plot(best_results)
     print(best_results)
 
 

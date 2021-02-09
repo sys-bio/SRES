@@ -13,7 +13,8 @@ namespace opt {
             : seed_(seed), generator_(std::default_random_engine(seed)) {}
 
     RandomNumberGenerator &RandomNumberGenerator::getInstance() {
-        static RandomNumberGenerator singleton;
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        static RandomNumberGenerator singleton(seed);
         return singleton;
     }
 
