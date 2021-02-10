@@ -35,6 +35,8 @@ namespace opt {
 
         bool fit() override;
 
+        bool fitLHS();
+
     private:
         bool swap(size_t from, size_t to);
 

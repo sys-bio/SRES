@@ -657,5 +657,103 @@ namespace opt {
         return true;
     }
 
+    bool SRES::fitLHS() {
+        bool Continue = true;
+        size_t bestIndex = std::numeric_limits<size_t>::max();
+
+        size_t Stalled = 0;
+
+        if (!initializeLHS()) {
+            // comment out mpCallBack code for now. Its to do with
+            // logging the results and I may roll my own.
+            // if (mpCallBack)
+            //    mpCallBack->finishItem(mhGenerations);
+
+            return false;
+        }
+
+        // initialise the population
+        Continue = creation(0);
+
+        // initialise solution variables. (cw not the same as original)
+        bestFitnessValue_ = populationFitness_[0];
+        solutionValues_ = population_[0];
+        hallOfFame_.push_back(populationFitness_[0]);
+
+        if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+            Continue = false;
+
+
+        // get the index of the fittest
+        bestIndex = findBestIndividual();
+
+        if (bestIndex != std::numeric_limits<size_t>::max()) {
+            // and store that value
+            bestFitnessValue_ = populationFitness_[bestIndex];
+            solutionValues_ = population_[bestIndex];
+            hallOfFame_.push_back(populationFitness_[bestIndex]);
+
+            if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+                Continue = false;
+
+
+            // todo will need something to replace this
+            // We found a new best value lets report it.
+            // mpParentTask->output(COutputInterface::DURING);
+        }
+
+        if (!Continue) {
+            // if (mpCallBack)
+            //    mpCallBack->finishItem(mhGenerations);
+
+            return true;
+        }
+
+        for (currentGeneration_ = 2;
+             currentGeneration_ <= numGenerations_ && Continue;
+             currentGeneration_++, Stalled++) {
+
+            if (stopAfterStalledGenerations_ != 0 && Stalled > stopAfterStalledGenerations_)
+                break;
+
+            Continue = replicate();
+
+            // select the most fit
+            select();
+
+            // get the index of the fittest
+            bestIndex = findBestIndividual();
+
+            if (bestIndex != std::numeric_limits<size_t>::max() && populationFitness_[bestIndex] < bestFitnessValue_) {
+                if (bestIndex != std::numeric_limits<size_t>::max()) {
+                    // and store that value
+                    bestFitnessValue_ = populationFitness_[bestIndex];
+                    hallOfFame_.push_back(populationFitness_[bestIndex]);
+                    solutionValues_ = population_[bestIndex];
+                    if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
+                        Continue = false;
+                }
+
+                // if (mpCallBack)
+                //    Continue = mpCallBack->progressItem(mhGenerations);
+
+                //use a different output channel. It will later get a proper enum name
+                // mpParentTask->output(COutputInterface::MONITORING);
+            }
+
+            //if (mLogVerbosity > 0)
+            //    mMethodLog.enterLogEntry(
+            //            COptLogEntry("Algorithm finished.",
+            //                         "Terminated after " + std::to_string(currentGeneration_ - 1) + " of " +
+            //                         std::to_string(mGenerations) + " generations."));
+
+            //if (mpCallBack)
+            //    mpCallBack->finishItem(mhGenerations);
+
+        }
+
+        return true;
+    }
+
 
 }
