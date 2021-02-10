@@ -26,7 +26,7 @@ double cost(double *input_params) {
 
 int main() {
 
-    SRES sres(cost, 25, 15, {8.324, 7.335}, {0.1, 0.1}, {10, 10}, 7);
+    SRES sres(cost, 10, 5, {8.324, 7.335}, {0.1, 0.1}, {10, 10}, 7);
     sres.fit();
 
     std::cout << "Solution best fit: " << sres.getBestFitnessValue() << "; best solution: ";
@@ -35,9 +35,9 @@ int main() {
     }
     std::cout << std::endl;
 
-    std::cout << "hall of fame ";
-    for (auto i: sres.getHallOfFame()) {
-        std::cout << i << "\t";
-    }
-    std::cout << std::endl;
+//    std::cout << "hall of fame ";
+//    for (auto i: sres.getHallOfFame()) {
+//        std::cout << i << "\t";
+//    }
+//    std::cout << std::endl;
 }

@@ -41,16 +41,49 @@ namespace opt {
 
         [[nodiscard]] bool checkUpperBound(const double &value) const;
 
-    private:
 
+    private:
+        void computeScaleArg1();
+
+        void computeScaleArg2();
+
+        [[nodiscard]] double scaleParameter(double trial) const;
+
+        [[nodiscard]] double unscaleParameter(double parameter) const;
+
+
+        /**
+         * @brief lower boundary of parameter during optimization
+         */
         double lb_;
 
+        /**
+         * @brief upper boundary of parameter during optimization
+         */
         double ub_;
 
+        /**
+         * @brief current value of the optimization item in parameter space
+         */
         double value_;
 
+
+        /**
+         * @brief initial parameter value
+         */
         double startingValue_;
 
+        /**
+         * @brief scaled value of optimization item. Experimental
+         */
+        double scaleArg1_;
+
+        /**
+         * @brief scaled value of optimization item. Experimental
+         */
+        double scaleArg2_;
+
+        double scaledParameter_;
     };
 }
 

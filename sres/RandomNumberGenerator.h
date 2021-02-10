@@ -31,7 +31,7 @@ namespace opt {
 
         std::vector<double> uniformReal(double lb, double ub, int size);
 
-        [[nodiscard]] const std::default_random_engine &getGenerator() const;
+//        [[nodiscard]] std::default_random_engine* getGenerator() const;
 
         void setGenerator(const std::default_random_engine &generator);
 
@@ -42,6 +42,12 @@ namespace opt {
         double uniformInt(int lb, int ub);
 
         std::vector<double> uniformInt(int lb, int ub, int size);
+
+        /**
+         * @brief produce a matrix of numbers sampled
+         * according to latin hypercode sampling with shape=(npopulation, nparams).
+         */
+        std::vector<std::vector<double>> lhs(int npopulation, int nparams);
 
     private:
 

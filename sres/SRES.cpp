@@ -254,6 +254,56 @@ namespace opt {
         return true;
     }
 
+    bool SRES::initializeLHS() {
+        size_t i;
+
+        if (pf_ < 0.0 || 1.0 < pf_) {
+            pf_ = 0.475;
+        }
+
+        // sample using lhs for init population. These numbers require scaling
+        RandomNumberGenerator rng = RandomNumberGenerator::getInstance();
+        population_ = rng.lhs(populationSize_*childRate_, numberOfParameters_);
+
+
+        variance_ = std::vector<std::vector<double>>(
+                populationSize_*childRate_, std::vector<double>(numberOfParameters_));
+
+        maxVariance_.resize(numberOfParameters_);
+
+        for (i = 0; i < numberOfParameters_; i++) {
+            const OptItem &optItem = optItems_[i];
+            try {
+                maxVariance_[i] =
+                        (optItem.getUb() - optItem.getLb()) / sqrt(double(numberOfParameters_));
+            }
+            catch (...) {
+                maxVariance_[i] = 1.0e3;
+            }
+        }
+
+        populationFitness_.resize(childRate_ * populationSize_);
+        populationFitness_.assign(populationFitness_.size(), std::numeric_limits<double>::infinity());
+        bestFitnessValue_ = std::numeric_limits<double>::infinity();
+        hallOfFame_.push_back(bestFitnessValue_);
+
+        phi_.resize(childRate_ * populationSize_);
+
+        try {
+
+            // double alpha = 0.2;
+            // double chi = 1 / (2 * sqrt(double(numberOfParameters_))) + 1 / (2 * double(numberOfParameters_));
+            // double varphi = sqrt(2/chi * log(1/alpha) *exp(chi/2 -(1-alpha)));
+
+            double varphi = 1; // or just set varphi to 1
+            tau_ = varphi / sqrt(2 * sqrt(double(numberOfParameters_)));
+            tauPrime_ = varphi / sqrt(2 * double(numberOfParameters_));
+        } catch (...) {
+            tau_ = tauPrime_ = 1;
+        }
+        return true;
+    }
+
     // Initialize the population
     bool SRES::creation(size_t first) {
         size_t i;
@@ -286,6 +336,7 @@ namespace opt {
                 double &mut = *pVariable;
                 const OptItem &optItem = optItems_[j];
 
+                // todo scale me
                 mut = optItem.getStartingValue();
 
                 // force it to be within the bounds

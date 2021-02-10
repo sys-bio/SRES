@@ -27,6 +27,12 @@ install(
 
 
 
+set(target RNGTests)
+add_executable(${target} RNGTests.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main SRES)
+gtest_add_tests(TARGET ${target})
+set(TESTS "${TESTS}" "${target}")
+
 set(target OptItemTests)
 add_executable(${target} OptItemTest.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main SRES)
