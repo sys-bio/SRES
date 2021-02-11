@@ -56,7 +56,8 @@ namespace opt {
          */
         Optimizer(
                 CostFunction cost, const DoubleVector &startingValues,
-                const DoubleVector &lb, const DoubleVector &ub, bool logspace
+                const DoubleVector &lb, const DoubleVector &ub, bool logspace,
+                bool verbose
         );
 
         /**
@@ -156,7 +157,15 @@ namespace opt {
          */
         int numberOfParameters_; // number of parameters to estimate
 
+        /**
+         * @brief output info during optimization
+         */
+        bool verbose_ = false;
 
+        /**
+         * @brief do optimization in logspace
+         */
+        bool logspace_ = true;
 
     };
 

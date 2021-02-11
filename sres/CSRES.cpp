@@ -20,13 +20,16 @@ namespace opt {
 
     SRES *SRES_newSRES(CostFunction cost, int populationSize, int numGenerations,
                        double *startingValues, const double *lb, double *ub, int numEstimatedParameters,
-                       int childrate) {
+                       int childrate, int stopAfterStalledGenerations, bool logspace,
+                       bool verbose) {
         try {
             std::vector<double> startVals(startingValues, startingValues + numEstimatedParameters);
             std::vector<double> lb_(lb, lb + numEstimatedParameters);
             std::vector<double> ub_(ub, ub + numEstimatedParameters);
 
-            SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_, childrate);
+
+            SRES *sres = new SRES(cost, populationSize, numGenerations, startVals, lb_, ub_, childrate,
+                                  stopAfterStalledGenerations, logspace, verbose);
             return sres;
         } catch (std::exception &e) {
             LAST_ERROR = e.what();
@@ -41,7 +44,7 @@ namespace opt {
 
     }
 
-    double SRES_getBestFitnessValue(SRES *sres){
+    double SRES_getBestFitnessValue(SRES *sres) {
         try {
             return sres->getBestFitnessValue();
         } catch (std::exception &e) {
@@ -52,6 +55,15 @@ namespace opt {
     bool SRES_fit(SRES *sres) {
         try {
             return sres->fit();
+        } catch (std::exception &e) {
+            LAST_ERROR = e.what();
+            return -1;
+        }
+    }
+
+    bool SRES_fitLHS(SRES *sres) {
+        try {
+            return sres->fitLHS();
         } catch (std::exception &e) {
             LAST_ERROR = e.what();
             return -1;

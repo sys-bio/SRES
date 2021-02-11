@@ -2,21 +2,30 @@
 // Created by Ciaran on 06/02/2021.
 //
 
+#include <iostream>
 #include "EvolutionaryOptimizer.h"
 
 
 namespace opt {
 
-
     EvolutionaryOptimizer::EvolutionaryOptimizer(
             CostFunction cost, int populationSize, int numGenerations,
             const DoubleVector &startingValues, const DoubleVector &lb,
-            const DoubleVector &ub, int childRate, int stopAfterStalledGenerations, bool logspace)
-            : Optimizer(cost, startingValues, lb, ub, logspace),
+            const DoubleVector &ub, int childRate, int stopAfterStalledGenerations,
+            bool logspace, bool verbose)
+            : Optimizer(cost, startingValues, lb, ub, logspace, verbose),
               populationSize_(populationSize),
               numGenerations_(numGenerations),
               childRate_(childRate),
-              stopAfterStalledGenerations_(stopAfterStalledGenerations) {}
+              stopAfterStalledGenerations_(stopAfterStalledGenerations) {
+        if (stopAfterStalledGenerations_ == 1) {
+            stopAfterStalledGenerations_ = ceil(numGenerations_ * 0.2); // defaults to 20% of generations
+        } else if(stopAfterStalledGenerations == 0){
+            // set arbitrarily high so we'll never hit it
+            stopAfterStalledGenerations_ = 1000000000;
+        }
+
+    }
 
 
     int EvolutionaryOptimizer::getPopulationSize() const {

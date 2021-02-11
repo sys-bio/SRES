@@ -44,8 +44,9 @@ namespace opt {
                 const DoubleVector &lb,
                 const DoubleVector &ub,
                 int childRate = 7,
-                int stopAfterStalledGenerations = 25,
-                bool logspace = false
+                int stopAfterStalledGenerations = 0,
+                bool logspace = false,
+                bool verbose = false
         );
 
         /**

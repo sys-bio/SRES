@@ -11,10 +11,9 @@
 namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
-               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace)
+               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace, bool verbose)
             : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate,
-                                    stopAfterStalledGenerations, logspace) {
-
+                                    stopAfterStalledGenerations, logspace, verbose) {
     };
 
     const DoubleVector &SRES::getMaxVariance() const {
@@ -273,12 +272,12 @@ namespace opt {
 
 //        std::ofstream ofs;
 //        ofs.open("D:\\SRES\\sres\\test\\unscaledParams.txt");
-        for (int i = 0; i < populationSize_ * childRate_; i++) {
-            for (int j = 0; j < numberOfParameters_; j++) {
-                std::cout << population_[i][j] << ", ";
-            }
-            std::cout << std::endl;
-        }
+//        for (int i = 0; i < populationSize_ * childRate_; i++) {
+//            for (int j = 0; j < numberOfParameters_; j++) {
+//                std::cout << population_[i][j] << ", ";
+//            }
+//            std::cout << std::endl;
+//        }
 
         variance_ = std::vector<std::vector<double>>(
                 populationSize_ * childRate_, std::vector<double>(numberOfParameters_));
@@ -350,7 +349,6 @@ namespace opt {
                 double &mut = *pVariable;
                 const OptItem &optItem = optItems_[j];
 
-                // todo scale me
                 mut = optItem.getStartingValue();
 
                 // force it to be within the bounds
@@ -546,12 +544,13 @@ namespace opt {
             wasSwapped = false;
 
             // :TODO: since we are only interested in mPopulationSize highest ranked
-            // individuals the upper limit of the loop can be improved.
+            //    individuals the upper limit of the loop can be improved.
             for (j = 0; j < TotalPopulation - 1; j++)  // lambda is number of individuals
             {
-                if ((phi_[j] == 0 && phi_[j + 1] == 0) || // within bounds
-                    (RandomNumberGenerator::getInstance().uniformReal(0, 1) <
-                     pf_))      // random chance to compare values outside bounds
+                if (
+                        (phi_[j] == 0 && phi_[j + 1] == 0) || // within bounds
+                        (RandomNumberGenerator::getInstance().uniformReal(0, 1) < pf_)
+                        )      // random chance to compare values outside bounds
                 {
                     // compare obj fcn using mValue alternative code
                     if (populationFitness_[j] > populationFitness_[j + 1]) {
@@ -608,6 +607,10 @@ namespace opt {
             bestFitnessValue_ = populationFitness_[bestIndex];
             solutionValues_ = population_[bestIndex];
             hallOfFame_.push_back(populationFitness_[bestIndex]);
+
+            if (verbose_) {
+                printCurrent();
+            }
 
             if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
                 Continue = false;
@@ -748,6 +751,11 @@ namespace opt {
                     solutionValues_ = population_[bestIndex];
                     if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
                         Continue = false;
+
+
+                    if (verbose_) {
+                        printCurrent();
+                    }
                 }
 
                 // if (mpCallBack)
@@ -769,6 +777,20 @@ namespace opt {
         }
 
         return true;
+    }
+
+    void SRES::printCurrent() {
+        std::cout << "printCurrent: Logspace is: " << logspace_ << std::endl;
+        std::cout << "current generation: " << currentGeneration_ << "; ";
+
+        if (logspace_) {
+            std::cout << "best objective value: " << pow(10, bestFitnessValue_) << std::endl;
+
+        } else {
+            std::cout << "best objective value: " << bestFitnessValue_ << std::endl;
+
+        }
+
     }
 
 

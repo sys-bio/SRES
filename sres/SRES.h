@@ -22,7 +22,9 @@ namespace opt {
 
         SRES(CostFunction cost, int populationSize, int numGenerations,
              const DoubleVector &startingValues, const DoubleVector &lb,
-             const DoubleVector &ub, int childrate, int stopAfterStalledGenerations = 25, bool logspace = false);
+             const DoubleVector &ub, int childrate,
+             int stopAfterStalledGenerations = 0, bool logspace = false,
+             bool verbose = false);
 
         [[nodiscard]] const DoubleVector &getMaxVariance() const;
 
@@ -48,7 +50,6 @@ namespace opt {
         bool initialize() override;
 
         bool initializeLHS();
-
 
         bool creation(size_t first);
 
@@ -82,6 +83,13 @@ namespace opt {
         DoubleVector phi_;
 
         bool logspace_ = false;
+
+        /**
+         * Prints output during optimization when true
+         */
+        bool verbose_ = false;
+
+        void printCurrent();
     };
 
 }
