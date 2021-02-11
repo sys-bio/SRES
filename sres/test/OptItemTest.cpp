@@ -16,7 +16,7 @@ public:
 
 TEST_F(OptItemTests, TestConstructible){
     ASSERT_NO_THROW(
-            OptItem item(0.5, 0.1, 10);
+            OptItem item(0.5, 0.1, 10, false);
     );
 }
 
