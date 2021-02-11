@@ -20,18 +20,28 @@ double BealeFunction(double x, double y) {
 
 
 double cost(double *input_params) {
+//    std::cout << "from cost fun: log x: " << input_params[0] << "; log y: " << input_params[1] << std::endl;
+//    std::cout << "from cost fun:     x:" << pow(10, input_params[0]) << ";    y: " << pow(10, input_params[1]) << std::endl;
+//    return BealeFunction(pow(10, input_params[0]), pow(10, input_params[1]));
     return BealeFunction(input_params[0], input_params[1]);
 }
 
 
 int main() {
 
-    SRES sres(cost, 3, 2, {8.324, 7.335}, {0.1, 0.1}, {10, 10}, 7);
-    sres.fit();
+    SRES sres(cost, 10, 5,
+              {8.324, 7.335},
+              {0.01, 0.01}, {100, 100}, 7, 25, false);
+    sres.fitLHS();
 
-    std::cout << "Solution best fit: " << sres.getBestFitnessValue() << "; best solution: ";
+    std::cout << "Solution best fit log space: " << sres.getBestFitnessValue() << "; best solution: ";
     for (auto i: sres.getSolutionValues()) {
         std::cout << i << "\t";
+    }
+    std::cout << std::endl;
+    std::cout << "Solution best fit lin space " << pow(10, sres.getBestFitnessValue()) << "; best solution: ";
+    for (auto i: sres.getSolutionValues()) {
+        std::cout << pow(10, i) << "\t";
     }
     std::cout << std::endl;
 

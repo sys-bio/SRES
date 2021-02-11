@@ -21,7 +21,7 @@ namespace opt {
 
     public:
 
-        static RandomNumberGenerator& getInstance();
+        static RandomNumberGenerator &getInstance();
 
         [[nodiscard]] unsigned long long int getSeed() const;
 
@@ -49,9 +49,17 @@ namespace opt {
          */
         std::vector<std::vector<double>> lhs(int npopulation, int nparams);
 
+        /**
+         * @brief Alternative overload of lhs algorithm where the ranges provided
+         * by the lb and ub vector arguments are used. Sampling can be done in logspace.
+         */
+        std::vector<std::vector<double>> RandomNumberGenerator::lhs(
+                int npopulation, int nparams, std::vector<double> lb, std::vector<double> ub, bool sampleInLogspace = true);
+
     private:
 
-        explicit RandomNumberGenerator(unsigned long long seed = std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        explicit RandomNumberGenerator(
+                unsigned long long seed = std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
         /**
          * @brief seed defaults to the current time

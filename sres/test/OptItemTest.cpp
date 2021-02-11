@@ -19,3 +19,9 @@ TEST_F(OptItemTests, TestConstructible){
             OptItem item(0.5, 0.1, 10);
     );
 }
+
+TEST_F(OptItemTests, CheckLbIsLogged){
+    OptItem item(0.5, 0.1, 10, true);
+    ASSERT_EQ(-1, item.getLb());
+}
+

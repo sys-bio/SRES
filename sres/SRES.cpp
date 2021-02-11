@@ -5,12 +5,17 @@
 #include "SRES.h"
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <ios>
 
 namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
-               const DoubleVector &ub, int childrate)
-            : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate) {};
+               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace)
+            : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate,
+                                    stopAfterStalledGenerations, logspace) {
+
+    };
 
     const DoubleVector &SRES::getMaxVariance() const {
         return maxVariance_;
@@ -255,7 +260,7 @@ namespace opt {
     }
 
     bool SRES::initializeLHS() {
-        size_t i;
+        size_t i, j;
 
         if (pf_ < 0.0 || 1.0 < pf_) {
             pf_ = 0.475;
@@ -263,11 +268,20 @@ namespace opt {
 
         // sample using lhs for init population. These numbers require scaling
         RandomNumberGenerator rng = RandomNumberGenerator::getInstance();
-        population_ = rng.lhs(populationSize_*childRate_, numberOfParameters_);
+        population_ = rng.lhs(populationSize_ * childRate_, numberOfParameters_, optItems_.getLb(), optItems_.getUb());
 
+
+//        std::ofstream ofs;
+//        ofs.open("D:\\SRES\\sres\\test\\unscaledParams.txt");
+        for (int i = 0; i < populationSize_ * childRate_; i++) {
+            for (int j = 0; j < numberOfParameters_; j++) {
+                std::cout << population_[i][j] << ", ";
+            }
+            std::cout << std::endl;
+        }
 
         variance_ = std::vector<std::vector<double>>(
-                populationSize_*childRate_, std::vector<double>(numberOfParameters_));
+                populationSize_ * childRate_, std::vector<double>(numberOfParameters_));
 
         maxVariance_.resize(numberOfParameters_);
 
@@ -357,7 +371,7 @@ namespace opt {
                         break;
 
                     case 1:
-                        mut = optItem.getUb();
+                        mut = optItem.getUb(); // should log stuff in optItem instead.
 
                         if (!optItem.checkUpperBound(mut)) // Inequality
                         {
@@ -671,6 +685,8 @@ namespace opt {
 
             return false;
         }
+
+
 
         // initialise the population
         Continue = creation(0);

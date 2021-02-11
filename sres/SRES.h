@@ -14,7 +14,6 @@
 
 namespace opt {
 
-
     class SRES : public EvolutionaryOptimizer {
 
     public:
@@ -23,7 +22,7 @@ namespace opt {
 
         SRES(CostFunction cost, int populationSize, int numGenerations,
              const DoubleVector &startingValues, const DoubleVector &lb,
-             const DoubleVector &ub, int childrate = 7);
+             const DoubleVector &ub, int childrate, int stopAfterStalledGenerations = 25, bool logspace = false);
 
         [[nodiscard]] const DoubleVector &getMaxVariance() const;
 
@@ -81,6 +80,8 @@ namespace opt {
         double tauPrime_ = 100.0;    // parameter for updating variances
 
         DoubleVector phi_;
+
+        bool logspace_ = false;
     };
 
 }

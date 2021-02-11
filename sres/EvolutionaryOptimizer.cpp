@@ -11,8 +11,8 @@ namespace opt {
     EvolutionaryOptimizer::EvolutionaryOptimizer(
             CostFunction cost, int populationSize, int numGenerations,
             const DoubleVector &startingValues, const DoubleVector &lb,
-            const DoubleVector &ub, int childRate, int stopAfterStalledGenerations)
-            : Optimizer(cost, startingValues, lb, ub),
+            const DoubleVector &ub, int childRate, int stopAfterStalledGenerations, bool logspace)
+            : Optimizer(cost, startingValues, lb, ub, logspace),
               populationSize_(populationSize),
               numGenerations_(numGenerations),
               childRate_(childRate),

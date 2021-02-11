@@ -79,43 +79,22 @@ namespace opt {
 
     std::vector<std::vector<double>> RandomNumberGenerator::lhs(int npopulation, int nparams) {
         /*
-         *  some snippets of the scipy implementation
-         * 	    # convert tuple of lower and upper bounds to limits
-         *           # [(low_0, high_0), ..., (low_n, high_n]
-         *           #     -> [[low_0, ..., low_n], [high_0, ..., high_n]]
-         *           if isinstance(bounds, Bounds):
-         *               self.limits = np.array(new_bounds_to_old(bounds.lb,
-         *                                                        bounds.ub,
-         *                                                        len(bounds.lb)),
-         *                                      dtype=float).T
-         *           else:
-         *               self.limits = np.array(bounds, dtype='float').T
-         *
-         *           self.__scale_arg1 = 0.5 * (self.limits[0] + self.limits[1])
-         *           self.__scale_arg2 = np.fabs(self.limits[0] - self.limits[1])
-         *
-         *           def _scale_parameters(self, trial):
-         *               """Scale from a number between 0 and 1 to parameters."""
-         *               return self.__scale_arg1 + (trial - 0.5) * self.__scale_arg2
-         *
-         *           def _unscale_parameters(self, parameters):
-         *               """Scale from parameters to a number between 0 and 1."""
-                    return (parameters - self.__scale_arg1) / self.__scale_arg2 + 0.5
          */
         // Each parameter range needs to be sampled uniformly. The scaled
         // parameter range ([0, 1)) needs to be split into
         // `npopulation` segments, each of which has the following
         // size:
+        int i, j;
         double segsize = 1.0 / npopulation;
 
         // initialize empty npopulation x nparams matrix for samples and population
         std::vector<std::vector<double>> samples(npopulation, std::vector<double>(nparams));
         std::vector<std::vector<double>> population(npopulation, std::vector<double>(nparams));
 
-        for (int i = 0; i < npopulation; i++) {
+        for (i = 0; i < npopulation; i++) {
             samples[i] = uniformReal(0, 1, nparams);
             // multiply by segsize
-            for (int j = 0; j < nparams; j++) {
+            for (j = 0; j < nparams; j++) {
                 samples[i][j] *= segsize; // segsize is a constant number < 1
             }
         }
@@ -126,13 +105,13 @@ namespace opt {
         //      + np.linspace(0., 1., self.num_population_members,
         //                                 endpoint=False)[:, np.newaxis])
         std::vector<double> lin(npopulation);
-        for (int i = 0; i < npopulation; i++) {
+        for (i = 0; i < npopulation; i++) {
             lin[i] = i / static_cast<double>(npopulation);
         }
 
         // we now add lin[j] to each column[i, j], shuffle and create our population matrix
-        for (int i = 0; i < npopulation; i++) {
-            for (int j = 0; j < nparams; j++) {
+        for (i = 0; i < npopulation; i++) {
+            for (j = 0; j < nparams; j++) {
                 // first scale the samples so they are in range 0-1 down each column
                 samples[i][j] += lin[i];
             }
@@ -140,21 +119,21 @@ namespace opt {
 
         // transpose our matrix
         std::vector<std::vector<double>> tmp_(nparams, std::vector<double>(npopulation));
-        for (int i = 0; i < npopulation; i++) {
-            for (int j = 0; j < nparams; j++) {
+        for (i = 0; i < npopulation; i++) {
+            for (j = 0; j < nparams; j++) {
                 tmp_[j][i] = samples[i][j];
             }
         }
 
         // now we can shuffle the rows of the transposed matrix
-        for (int j = 0; j < nparams; j++) {
+        for (j = 0; j < nparams; j++) {
             // create column vectors with randomized indices, one for each column
             std::shuffle(tmp_[j].begin(), tmp_[j].end(), generator_);
         }
 
         // and we transpose back
-        for (int i = 0; i < nparams; i++) {
-            for (int j = 0; j < npopulation; j++) {
+        for (i = 0; i < nparams; i++) {
+            for (j = 0; j < npopulation; j++) {
                 population[j][i] = tmp_[i][j];
             }
         }
@@ -164,5 +143,55 @@ namespace opt {
 
     }
 
+    std::vector<std::vector<double>> RandomNumberGenerator::lhs(
+            int npopulation, int nparams, std::vector<double> lb, std::vector<double> ub, bool sampleInLogspace) {
+        int i, j;
+
+//        if (sampleInLogspace) {
+//            for (j = 0; j < nparams; j++) {
+//                lb[j] = log10(lb[j]);
+//                ub[j] = log10(ub[j]);
+//            }
+//        }
+
+        // initialize empty npopulation x nparams matrix for samples and population
+        std::vector<std::vector<double>> samples(npopulation, std::vector<double>(nparams));
+        std::vector<std::vector<double>> population(npopulation, std::vector<double>(nparams));
+
+        double step;
+        for (i = 1; i < npopulation + 1; i++) {
+            // multiply by segsize
+            for (j = 0; j < nparams; j++) {
+                step = (ub[j] - lb[j]) / npopulation;
+                samples[i - 1][j] = uniformReal(lb[j] + i * step, lb[j] + (i + 1) * step);
+                population[i - 1][j] = samples[i - 1][j];
+            }
+        }
+
+        // transpose our matrix for easy shuffling along the now rows but soon to be columns
+        std::vector<std::vector<double>> tmp_(nparams, std::vector<double>(npopulation));
+        for (i = 0; i < npopulation; i++) {
+            for (j = 0; j < nparams; j++) {
+                tmp_[j][i] = samples[i][j];
+            }
+        }
+
+        // now we can shuffle the rows of the transposed matrix
+        for (j = 0; j < nparams; j++) {
+            // create column vectors with randomized indices, one for each column
+            std::shuffle(tmp_[j].begin(), tmp_[j].end(), generator_);
+        }
+
+        // and we transpose back, multiplying out the log10 if needed
+        for (i = 0; i < nparams; i++) {
+            for (j = 0; j < npopulation; j++) {
+//                if (sampleInLogspace)
+//                    population[j][i] = pow(10, tmp_[i][j]);
+//                else
+                    population[j][i] = tmp_[i][j];
+            }
+        }
+        return population;
+    }
 
 }

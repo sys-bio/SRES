@@ -56,7 +56,7 @@ namespace opt {
          */
         Optimizer(
                 CostFunction cost, const DoubleVector &startingValues,
-                const DoubleVector &lb, const DoubleVector &ub
+                const DoubleVector &lb, const DoubleVector &ub, bool logspace
         );
 
         /**

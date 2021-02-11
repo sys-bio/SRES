@@ -7,9 +7,15 @@
 
 namespace opt {
 
-    OptItem::OptItem(double startingValue, double lb, double ub)
-            : value_(startingValue), startingValue_(value_), lb_(lb), ub_(ub),
-            scaledParameter_(unscaleParameter(value_)){}
+    OptItem::OptItem(double startingValue, double lb, double ub, bool logspace)
+            : value_(startingValue), startingValue_(startingValue), lb_(lb), ub_(ub){
+
+        if (logspace){
+            value_ = log10(value_);
+            lb_ = log10(lb_);
+            ub_ = log10(ub_);
+        }
+    }
 
     double OptItem::getLb() const {
         return lb_;
@@ -76,18 +82,14 @@ namespace opt {
         scaleArg2_ = abs(lb_ - ub_);
     }
 
-    /**
-     * @brief scale a number between 0 and 1 to parameter value
-     */
-    double OptItem::scaleParameter(double trial) const{
+
+    double OptItem::scaleParameter(double trial) const {
         // self.__scale_arg1 + (trial - 0.5) * self.__scale_arg2
-        return scaleArg1_ + (trial + 0.5) * scaleArg2_;
+        return scaleArg1_ + (trial - 0.5) * scaleArg2_;
     }
 
-    /**
-     * @brief unscale a number from parameters to 0 and 1
-     */
-    double OptItem::unscaleParameter(double parameterValue) const{
+
+    double OptItem::unscaleParameter(double parameterValue) const {
         return (parameterValue - scaleArg1_) / scaleArg2_ + 0.5;
     }
 
