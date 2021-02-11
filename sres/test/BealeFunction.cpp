@@ -38,7 +38,7 @@ int main() {
     SRES sres(cost, 10, 5,
               {8.324, 7.335},
               {0.01, 0.01}, {100, 100}, 7, 25, LOGSPACE, true);
-    sres.fitLHS();
+    sres.fit();
 
     std::cout << "Solution best fit log space: " << sres.getBestFitnessValue() << "; best solution: ";
     for (auto i: sres.getSolutionValues()) {

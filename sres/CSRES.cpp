@@ -61,14 +61,6 @@ namespace opt {
         }
     }
 
-    bool SRES_fitLHS(SRES *sres) {
-        try {
-            return sres->fitLHS();
-        } catch (std::exception &e) {
-            LAST_ERROR = e.what();
-            return -1;
-        }
-    }
 
     int SRES_setSeed(SRES *sres, unsigned long long seed) {
         try {

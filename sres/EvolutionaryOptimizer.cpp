@@ -118,29 +118,30 @@ namespace opt {
 //            std::vector<double> fitnesses(populationSize_ * childRate_);
 
             // sample using lhs
-            DoubleMatrix trialPop = rng.lhs(
-                    populationSize_ * childRate_,
-                    numberOfParameters_,
-                    optItems_.getLb(),
-                    optItems_.getUb()
-            );
+//            DoubleMatrix trialPop = rng.lhs(
+//                    populationSize_ * childRate_,
+//                    numberOfParameters_,
+//                    optItems_.getLb(),
+//                    optItems_.getUb()
+//            );
 
             // evolve a little
+//            fit();
 
 
-            // evaluate the fitnesses using C++17's cool parallel for_each =]
-            double fitnessOfThisTrail = 0;
-            std::for_each(std::execution::par, trialPop.begin(), trialPop.end(),
-                          [this, &fitnessOfThisTrail](auto &ind) {
-                              double *pd = ind.data();
-                              fitnessOfThisTrail += (*cost_)(pd);
-                          });
-
-            if (fitnessOfThisTrail < bestTrial) {
-                // we've found a better starting set
-                bestTrial = fitnessOfThisTrail;
-                bestPop = trialPop;
-            }
+//            // evaluate the fitnesses using C++17's cool parallel for_each =]
+//            double fitnessOfThisTrail = 0;
+//            std::for_each(std::execution::par, trialPop.begin(), trialPop.end(),
+//                          [this, &fitnessOfThisTrail](auto &ind) {
+//                              double *pd = ind.data();
+//                              fitnessOfThisTrail += (*cost_)(pd);
+//                          });
+//
+//            if (fitnessOfThisTrail < bestTrial) {
+//                // we've found a better starting set
+//                bestTrial = fitnessOfThisTrail;
+//                bestPop = trialPop;
+//            }
         }
         return bestPop;
     }

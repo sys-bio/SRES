@@ -38,15 +38,13 @@ namespace opt {
 
         bool fit() override;
 
-        bool fitLHS();
 
-
-    private:
         void printCurrent();
 
         bool swap(size_t from, size_t to);
 
         bool replicate();
+        bool replicate2();
 
         bool mutate() override;
 
@@ -54,14 +52,19 @@ namespace opt {
 
         bool initialize() override;
 
-        bool initializeLHS();
-
         bool creation(size_t first);
 
+        /**
+         * @brief locates the best individual of the current population
+         * @details in doing so the solutionValues_ containing the
+         * parameters belonging to the fittest individual are updated.
+         *
+         */
         size_t findBestIndividual() override;
 
         void select() override;
 
+    private:
         /**
          * @brief variance of every position in the
          * populationi matrix

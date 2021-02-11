@@ -39,9 +39,9 @@ namespace opt {
 
         std::vector<double> normal(double mu, double sigma, int size);
 
-        double uniformInt(int lb, int ub);
+        int uniformInt(int lb, int ub);
 
-        std::vector<double> uniformInt(int lb, int ub, int size);
+        std::vector<int> uniformInt(int lb, int ub, int size);
 
         /**
          * @brief produce a matrix of numbers sampled
@@ -53,7 +53,7 @@ namespace opt {
          * @brief Alternative overload of lhs algorithm where the ranges provided
          * by the lb and ub vector arguments are used. Sampling can be done in logspace.
          */
-        std::vector<std::vector<double>> RandomNumberGenerator::lhs(
+        std::vector<std::vector<double>> lhs(
                 int npopulation, int nparams, std::vector<double> lb, std::vector<double> ub, bool sampleInLogspace = true);
 
     private:

@@ -50,13 +50,13 @@ namespace opt {
         return r;
     }
 
-    double RandomNumberGenerator::uniformInt(int lb, int ub) {
+    int RandomNumberGenerator::uniformInt(int lb, int ub) {
         std::uniform_int_distribution<int> distibution(lb, ub);
         return distibution(generator_);
     }
 
-    std::vector<double> RandomNumberGenerator::uniformInt(int lb, int ub, int size) {
-        std::vector<double> r;
+    std::vector<int> RandomNumberGenerator::uniformInt(int lb, int ub, int size) {
+        std::vector<int> r;
         for (int i = 0; i < size; i++) {
             r.push_back(uniformInt(lb, ub));
         }

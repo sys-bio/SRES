@@ -191,7 +191,7 @@ class SRES:
 
     def fit(self) -> Dict[str, Union[float, np.array]]:
         """perform the optimization"""
-        self._fitLHS(self._obj)
+        self._fit(self._obj)
         if self._logspace:
             dct = dict(
                 bestFitness=10 ** self.getBestValue(),
@@ -251,11 +251,6 @@ class SRES:
 
     _fit = _sres.load_func(
         funcname="SRES_fit",
-        argtypes=[ct.c_int64],
-        return_type=ct.c_bool
-    )
-    _fitLHS = _sres.load_func(
-        funcname="SRES_fitLHS",
         argtypes=[ct.c_int64],
         return_type=ct.c_bool
     )
