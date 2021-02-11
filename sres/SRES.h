@@ -24,7 +24,9 @@ namespace opt {
              const DoubleVector &startingValues, const DoubleVector &lb,
              const DoubleVector &ub, int childrate,
              int stopAfterStalledGenerations = 0, bool logspace = false,
-             bool verbose = false);
+             bool verbose = false,
+             int numLHSInitSamples = 0,
+             int numGenerationsForLHSInitSamples = 5);
 
         [[nodiscard]] const DoubleVector &getMaxVariance() const;
 
@@ -38,7 +40,10 @@ namespace opt {
 
         bool fitLHS();
 
+
     private:
+        void printCurrent();
+
         bool swap(size_t from, size_t to);
 
         bool replicate();
@@ -81,15 +86,6 @@ namespace opt {
         double tauPrime_ = 100.0;    // parameter for updating variances
 
         DoubleVector phi_;
-
-        bool logspace_ = false;
-
-        /**
-         * Prints output during optimization when true
-         */
-        bool verbose_ = false;
-
-        void printCurrent();
     };
 
 }

@@ -40,16 +40,16 @@ int main() {
               {0.01, 0.01}, {100, 100}, 7, 25, LOGSPACE, true);
     sres.fitLHS();
 
-//    std::cout << "Solution best fit log space: " << sres.getBestFitnessValue() << "; best solution: ";
-//    for (auto i: sres.getSolutionValues()) {
-//        std::cout << i << "\t";
-//    }
-//    std::cout << std::endl;
-//    std::cout << "Solution best fit lin space " << pow(10, sres.getBestFitnessValue()) << "; best solution: ";
-//    for (auto i: sres.getSolutionValues()) {
-//        std::cout << pow(10, i) << "\t";
-//    }
-//    std::cout << std::endl;
+    std::cout << "Solution best fit log space: " << sres.getBestFitnessValue() << "; best solution: ";
+    for (auto i: sres.getSolutionValues()) {
+        std::cout << i << "\t";
+    }
+    std::cout << std::endl;
+    std::cout << "Solution best fit lin space " << pow(10, sres.getBestFitnessValue()) << "; best solution: ";
+    for (auto i: sres.getSolutionValues()) {
+        std::cout << pow(10, i) << "\t";
+    }
+    std::cout << std::endl;
 
 //    std::cout << "hall of fame ";
 //    for (auto i: sres.getHallOfFame()) {

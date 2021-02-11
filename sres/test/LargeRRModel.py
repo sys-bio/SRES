@@ -283,7 +283,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    NGEN = 1000
+    NGEN = 200
     POPSIZE = len(r.freeParameters()) * 10
     N = 20
 

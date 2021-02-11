@@ -7,13 +7,19 @@
 #include <iostream>
 #include <fstream>
 #include <ios>
+#include <set>
 
 namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
-               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace, bool verbose)
-            : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate,
-                                    stopAfterStalledGenerations, logspace, verbose) {
+               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace, bool verbose,
+               int numLHSInitSamples, int numGenerationsForLHSInitSamples)
+            : EvolutionaryOptimizer(
+            cost, populationSize, numGenerations,
+            startingValues, lb, ub, childrate,
+            stopAfterStalledGenerations, logspace, verbose,
+            numLHSInitSamples, numGenerationsForLHSInitSamples
+            ) {
     };
 
     const DoubleVector &SRES::getMaxVariance() const {
@@ -269,15 +275,8 @@ namespace opt {
         RandomNumberGenerator rng = RandomNumberGenerator::getInstance();
         population_ = rng.lhs(populationSize_ * childRate_, numberOfParameters_, optItems_.getLb(), optItems_.getUb());
 
+        // determine fitness of initial population
 
-//        std::ofstream ofs;
-//        ofs.open("D:\\SRES\\sres\\test\\unscaledParams.txt");
-//        for (int i = 0; i < populationSize_ * childRate_; i++) {
-//            for (int j = 0; j < numberOfParameters_; j++) {
-//                std::cout << population_[i][j] << ", ";
-//            }
-//            std::cout << std::endl;
-//        }
 
         variance_ = std::vector<std::vector<double>>(
                 populationSize_ * childRate_, std::vector<double>(numberOfParameters_));
@@ -571,110 +570,7 @@ namespace opt {
         }
     }
 
-
     bool SRES::fit() {
-        bool Continue = true;
-        size_t bestIndex = std::numeric_limits<size_t>::max();
-
-        size_t Stalled = 0;
-
-        if (!initialize()) {
-            // comment out mpCallBack code for now. Its to do with
-            // logging the results and I may roll my own.
-            // if (mpCallBack)
-            //    mpCallBack->finishItem(mhGenerations);
-
-            return false;
-        }
-
-        // initialise the population
-        Continue = creation(0);
-
-        // initialise solution variables. (cw not the same as original)
-        bestFitnessValue_ = populationFitness_[0];
-        solutionValues_ = population_[0];
-        hallOfFame_.push_back(populationFitness_[0]);
-
-        if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
-            Continue = false;
-
-
-        // get the index of the fittest
-        bestIndex = findBestIndividual();
-
-        if (bestIndex != std::numeric_limits<size_t>::max()) {
-            // and store that value
-            bestFitnessValue_ = populationFitness_[bestIndex];
-            solutionValues_ = population_[bestIndex];
-            hallOfFame_.push_back(populationFitness_[bestIndex]);
-
-            if (verbose_) {
-                printCurrent();
-            }
-
-            if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
-                Continue = false;
-
-
-            // todo will need something to replace this
-            // We found a new best value lets report it.
-            // mpParentTask->output(COutputInterface::DURING);
-        }
-
-        if (!Continue) {
-            // if (mpCallBack)
-            //    mpCallBack->finishItem(mhGenerations);
-
-            return true;
-        }
-
-        for (currentGeneration_ = 2;
-             currentGeneration_ <= numGenerations_ && Continue;
-             currentGeneration_++, Stalled++) {
-
-            if (stopAfterStalledGenerations_ != 0 && Stalled > stopAfterStalledGenerations_)
-                break;
-
-            Continue = replicate();
-
-            // select the most fit
-            select();
-
-            // get the index of the fittest
-            bestIndex = findBestIndividual();
-
-            if (bestIndex != std::numeric_limits<size_t>::max() && populationFitness_[bestIndex] < bestFitnessValue_) {
-                if (bestIndex != std::numeric_limits<size_t>::max()) {
-                    // and store that value
-                    bestFitnessValue_ = populationFitness_[bestIndex];
-                    hallOfFame_.push_back(populationFitness_[bestIndex]);
-                    solutionValues_ = population_[bestIndex];
-                    if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
-                        Continue = false;
-                }
-
-                // if (mpCallBack)
-                //    Continue = mpCallBack->progressItem(mhGenerations);
-
-                //use a different output channel. It will later get a proper enum name
-                // mpParentTask->output(COutputInterface::MONITORING);
-            }
-
-            //if (mLogVerbosity > 0)
-            //    mMethodLog.enterLogEntry(
-            //            COptLogEntry("Algorithm finished.",
-            //                         "Terminated after " + std::to_string(currentGeneration_ - 1) + " of " +
-            //                         std::to_string(mGenerations) + " generations."));
-
-            //if (mpCallBack)
-            //    mpCallBack->finishItem(mhGenerations);
-
-        }
-
-        return true;
-    }
-
-    bool SRES::fitLHS() {
         bool Continue = true;
         size_t bestIndex = std::numeric_limits<size_t>::max();
 
@@ -688,8 +584,6 @@ namespace opt {
 
             return false;
         }
-
-
 
         // initialise the population
         Continue = creation(0);
@@ -780,7 +674,6 @@ namespace opt {
     }
 
     void SRES::printCurrent() {
-        std::cout << "printCurrent: Logspace is: " << logspace_ << std::endl;
         std::cout << "current generation: " << currentGeneration_ << "; ";
 
         if (logspace_) {

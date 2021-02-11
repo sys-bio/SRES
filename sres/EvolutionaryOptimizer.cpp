@@ -4,7 +4,8 @@
 
 #include <iostream>
 #include "EvolutionaryOptimizer.h"
-
+#include <set>
+#include <execution>
 
 namespace opt {
 
@@ -12,21 +13,22 @@ namespace opt {
             CostFunction cost, int populationSize, int numGenerations,
             const DoubleVector &startingValues, const DoubleVector &lb,
             const DoubleVector &ub, int childRate, int stopAfterStalledGenerations,
-            bool logspace, bool verbose)
+            bool logspace, bool verbose, int numLHSInitSamples,
+            int numGenerationsForLHSInitSamples)
             : Optimizer(cost, startingValues, lb, ub, logspace, verbose),
               populationSize_(populationSize),
               numGenerations_(numGenerations),
               childRate_(childRate),
-              stopAfterStalledGenerations_(stopAfterStalledGenerations) {
+              stopAfterStalledGenerations_(stopAfterStalledGenerations),
+              numLHSInitSamples_(numLHSInitSamples),
+              numGenerationsForLHSInitSamples_(numGenerationsForLHSInitSamples) {
         if (stopAfterStalledGenerations_ == 1) {
             stopAfterStalledGenerations_ = ceil(numGenerations_ * 0.2); // defaults to 20% of generations
-        } else if(stopAfterStalledGenerations == 0){
+        } else if (stopAfterStalledGenerations == 0) {
             // set arbitrarily high so we'll never hit it
             stopAfterStalledGenerations_ = 1000000000;
         }
-
     }
-
 
     int EvolutionaryOptimizer::getPopulationSize() const {
         return populationSize_;
@@ -70,6 +72,7 @@ namespace opt {
         return Continue;
     }
 
+
     int EvolutionaryOptimizer::getCurrentGeneration() const {
         return currentGeneration_;
     }
@@ -100,6 +103,46 @@ namespace opt {
 
     void EvolutionaryOptimizer::setPopulationFitness(const DoubleVector &populationFitness) {
         EvolutionaryOptimizer::populationFitness_ = populationFitness;
+    }
+
+    DoubleMatrix EvolutionaryOptimizer::findStartingSet() {
+        RandomNumberGenerator rng = RandomNumberGenerator::getInstance();
+
+
+        DoubleMatrix bestPop;
+        double bestTrial = 100000000; // arbitrarily large to start with
+
+        for (int trial = 0; trial < numLHSInitSamples_; trial++) {
+
+            // initialize vector to store fitnesses
+//            std::vector<double> fitnesses(populationSize_ * childRate_);
+
+            // sample using lhs
+            DoubleMatrix trialPop = rng.lhs(
+                    populationSize_ * childRate_,
+                    numberOfParameters_,
+                    optItems_.getLb(),
+                    optItems_.getUb()
+            );
+
+            // evolve a little
+
+
+            // evaluate the fitnesses using C++17's cool parallel for_each =]
+            double fitnessOfThisTrail = 0;
+            std::for_each(std::execution::par, trialPop.begin(), trialPop.end(),
+                          [this, &fitnessOfThisTrail](auto &ind) {
+                              double *pd = ind.data();
+                              fitnessOfThisTrail += (*cost_)(pd);
+                          });
+
+            if (fitnessOfThisTrail < bestTrial) {
+                // we've found a better starting set
+                bestTrial = fitnessOfThisTrail;
+                bestPop = trialPop;
+            }
+        }
+        return bestPop;
     }
 
 
