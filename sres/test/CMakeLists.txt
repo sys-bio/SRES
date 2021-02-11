@@ -26,6 +26,12 @@ install(
 )
 
 
+set(target RNGTests)
+add_executable(${target} RNGTests.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main SRES)
+gtest_add_tests(TARGET ${target})
+set(TESTS "${TESTS}" "${target}")
+
 
 set(target OptItemTests)
 add_executable(${target} OptItemTest.cpp)
@@ -48,21 +54,21 @@ gtest_add_tests(TARGET ${target})
 set(TESTS "${TESTS}" "${target}")
 
 
-
 set(target SRESCTest)
 add_executable(${target} CCSRESTest.cpp)
 target_link_libraries(${target} PRIVATE gtest gtest_main SRESC)
 gtest_add_tests(TARGET ${target})
 set(TESTS "${TESTS}" "${target}")
 
+
+set(target SRESTests)
+add_executable(${target} SRESTests.cpp)
+target_link_libraries(${target} PRIVATE gtest gtest_main SRES)
+gtest_add_tests(TARGET ${target})
+set(TESTS "${TESTS}" "${target}")
+
+
 install(TARGETS ${TESTS})
-#set(target EvolutionaryOptimizerTests)
-#add_executable(${target} EvolutionaryOptimizerTests)
-#target_link_libraries(${target} PRIVATE gtest gtest_main SRES)
-#target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-
-
 
 
 

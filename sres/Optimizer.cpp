@@ -4,16 +4,21 @@
 
 #include <utility>
 #include <vector>
+#include <iostream>
 #include "Optimizer.h"
 
 namespace opt {
 
     Optimizer::Optimizer(
             opt::CostFunction cost, const std::vector<double> &startingValues,
-            const std::vector<double> &lb, const std::vector<double> &ub)
+            const std::vector<double> &lb, const std::vector<double> &ub, bool logspace,
+            bool verbose)
             : cost_(cost),
-              optItems_(OptItems(startingValues, lb, ub)),
-              numberOfParameters_(startingValues.size()) {}
+              optItems_(OptItems(startingValues, lb, ub, logspace)),
+              numberOfParameters_(startingValues.size()),
+              verbose_(verbose){
+
+    }
 
     Optimizer::Optimizer(opt::CostFunction cost, OptItems optItems)
             :
@@ -42,7 +47,7 @@ namespace opt {
     }
 
     bool Optimizer::setSolution(const double &value,
-                           const std::vector<double> &variables) {
+                                const std::vector<double> &variables) {
         bestFitnessValue_ = value;
         hallOfFame_.push_back(bestFitnessValue_);
 

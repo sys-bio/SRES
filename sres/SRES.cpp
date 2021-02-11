@@ -5,12 +5,24 @@
 #include "SRES.h"
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <ios>
+#include <set>
+#include <execution>
+#include <ranges>
 
 namespace opt {
     SRES::SRES(CostFunction cost, int populationSize,
                int numGenerations, const DoubleVector &startingValues, const DoubleVector &lb,
-               const DoubleVector &ub, int childrate)
-            : EvolutionaryOptimizer(cost, populationSize, numGenerations, startingValues, lb, ub, childrate) {};
+               const DoubleVector &ub, int childrate, int stopAfterStalledGenerations, bool logspace, bool verbose,
+               int numLHSInitSamples, int numGenerationsForLHSInitSamples)
+            : EvolutionaryOptimizer(
+            cost, populationSize, numGenerations,
+            startingValues, lb, ub, childrate,
+            stopAfterStalledGenerations, logspace, verbose,
+            numLHSInitSamples, numGenerationsForLHSInitSamples
+    ) {
+    };
 
     const DoubleVector &SRES::getMaxVariance() const {
         return maxVariance_;
@@ -82,6 +94,71 @@ namespace opt {
                 pVarianceEnd = pVariance + numberOfParameters_;
                 // extract pointer to Parent element of variance vector
                 pParentVariance = variance_[Parent].data();
+
+                for (; pVariance != pVarianceEnd; ++pVariance, ++pParentVariance)
+                    *pVariance = (*pVariance + *pParentVariance) * .5;
+            }
+        }
+
+        Continue &= mutate();
+
+        return Continue;
+    }
+
+    bool SRES::replicate2() {
+        bool Continue = true;
+
+        int parent;
+        int i, j;
+
+        auto itSrc = population_.begin();
+        auto endSrc = itSrc + populationSize_;
+        auto itTarget = endSrc;
+        auto itSrcVariance = variance_.begin();
+        auto itTargetVariance = itSrcVariance + populationSize_;
+
+        double *pVariance;
+        double *pVarianceEnd;
+        double *pParentVariance;
+
+        std::vector<double> child(numberOfParameters_);
+        std::vector<double> childVariance(numberOfParameters_);
+        int parentIdx;
+
+        // iterate over parents
+        for (i = 0; i < populationSize_; i++) {
+            // and iterate over childrate -1, since parent is the first child
+            for (j = 1; j < getChildRate(); j++) {
+                // first just copy parent to child
+                std::copy(population_[i].begin(), population_[i].end(), child.begin());
+                std::copy(variance_[i].begin(), variance_[i].end(), childVariance.begin());
+
+                // do recombination on the sigma
+                // since sigmas already have one parent's component
+                // need only average with the sigmas of the other parent
+
+                // randomly select the index of a parent
+                parentIdx = RandomNumberGenerator::getInstance().uniformInt(0, i + populationSize_ - 1);
+
+            }
+        }
+
+        // iterate over parents
+        for (i = 0; itSrc != endSrc && Continue; ++itSrc, ++itSrcVariance, ++i) {
+            // iterate over the child rate - 1 since the first child is the parent.
+            for (j = 1; j < getChildRate(); ++j, ++itTarget, ++itTargetVariance) {
+                // first just copy the individuals
+                *itTarget = *itSrc;
+                *itTargetVariance = *itSrcVariance;
+
+
+                parent = RandomNumberGenerator::getInstance().uniformInt(0, i + populationSize_ - 1);
+
+                // extract the pointer to first element from itTargetVariance
+                pVariance = itTargetVariance->data();
+                pVarianceEnd = pVariance + numberOfParameters_;
+                // extract pointer to Parent element of variance vector
+                pParentVariance = variance_[parent].data();
 
                 for (; pVariance != pVarianceEnd; ++pVariance, ++pParentVariance)
                     *pVariance = (*pVariance + *pParentVariance) * .5;
@@ -203,21 +280,32 @@ namespace opt {
     }
 
     bool SRES::initialize() {
-        size_t i;
+        size_t i, j;
 
         if (pf_ < 0.0 || 1.0 < pf_) {
             pf_ = 0.475;
         }
 
-        population_.resize(childRate_ * populationSize_);
+        // sample using lhs for init population.
+        RandomNumberGenerator rng = RandomNumberGenerator::getInstance();
+        population_ = rng.lhs(
+                populationSize_ * childRate_,
+                numberOfParameters_,
+                optItems_.getLb(),
+                optItems_.getUb()
+        );
 
-        for (i = 0; i < childRate_ * populationSize_; i++)
-            population_[i] = std::vector<double>(numberOfParameters_);
+        // determine fitness of initial population
+//        i = 0;
+//        std::for_each(std::execution::par, population_.begin(), population_.end(),
+//                      [this, &i](auto &ind) {
+//                          double *pd = ind.data();
+//                          populationFitness_[i] = (*cost_)(pd);
+//                          i++;
+//                      });
 
-        variance_.resize(childRate_ * populationSize_);
-
-        for (i = 0; i < childRate_ * populationSize_; i++)
-            variance_[i] = std::vector<double>(numberOfParameters_);
+        variance_ = std::vector<std::vector<double>>(
+                populationSize_ * childRate_, std::vector<double>(numberOfParameters_));
 
         maxVariance_.resize(numberOfParameters_);
 
@@ -306,7 +394,7 @@ namespace opt {
                         break;
 
                     case 1:
-                        mut = optItem.getUb();
+                        mut = optItem.getUb(); // should log stuff in optItem instead.
 
                         if (!optItem.checkUpperBound(mut)) // Inequality
                         {
@@ -457,10 +545,14 @@ namespace opt {
         size_t i, bestIndex = std::numeric_limits<size_t>::max();
         double bestValue = std::numeric_limits<double>::max();
 
-        for (i = 0; i < populationSize_; i++)
+        // get index of max element using parallel execution policy
+        // might be able to use this, but what does phi do?
+        //int idx = *std::max_element(std::execution::par, populationFitness_.begin(), populationFitness_.end());
+
+        for (i = 0; i < population_.size(); i++)
             if (populationFitness_[i] < bestValue && phi_[i] == 0) {
-                bestIndex = i;
                 bestValue = populationFitness_[i];
+                bestIndex = i;
                 solutionValues_ = population_[i];
             }
 
@@ -481,12 +573,13 @@ namespace opt {
             wasSwapped = false;
 
             // :TODO: since we are only interested in mPopulationSize highest ranked
-            // individuals the upper limit of the loop can be improved.
+            //    individuals the upper limit of the loop can be improved.
             for (j = 0; j < TotalPopulation - 1; j++)  // lambda is number of individuals
             {
-                if ((phi_[j] == 0 && phi_[j + 1] == 0) || // within bounds
-                    (RandomNumberGenerator::getInstance().uniformReal(0, 1) <
-                     pf_))      // random chance to compare values outside bounds
+                if (
+                        (phi_[j] == 0 && phi_[j + 1] == 0) || // within bounds
+                        (RandomNumberGenerator::getInstance().uniformReal(0, 1) < pf_)
+                        )      // random chance to compare values outside bounds
                 {
                     // compare obj fcn using mValue alternative code
                     if (populationFitness_[j] > populationFitness_[j + 1]) {
@@ -506,7 +599,6 @@ namespace opt {
             if (!wasSwapped) break;
         }
     }
-
 
     bool SRES::fit() {
         bool Continue = true;
@@ -583,6 +675,10 @@ namespace opt {
                     solutionValues_ = population_[bestIndex];
                     if (bestFitnessValue_ == -std::numeric_limits<double>::infinity())
                         Continue = false;
+
+                    if (verbose_) {
+                        printCurrent();
+                    }
                 }
 
                 // if (mpCallBack)
@@ -604,6 +700,19 @@ namespace opt {
         }
 
         return true;
+    }
+
+    void SRES::printCurrent() {
+        std::cout << "current generation: " << currentGeneration_ << "; ";
+
+        if (logspace_) {
+            std::cout << "best objective value: " << pow(10, bestFitnessValue_) << std::endl;
+
+        } else {
+            std::cout << "best objective value: " << bestFitnessValue_ << std::endl;
+
+        }
+
     }
 
 

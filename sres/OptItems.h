@@ -19,7 +19,8 @@ namespace opt {
 
         OptItems(std::initializer_list<OptItem> optItems);
 
-        OptItems(const std::vector<double>& startingValues, const std::vector<double>& lb, const std::vector<double>&ub);
+        OptItems(const std::vector<double> &startingValues, const std::vector<double> &lb,
+                 const std::vector<double> &ub, bool logspace);
 
         int size();
 
@@ -27,11 +28,33 @@ namespace opt {
 
         std::vector<OptItem>::iterator end();
 
-        OptItem& operator[](int index);
+        OptItem &operator[](int index);
+
+        [[nodiscard]] const std::vector<OptItem> &getOptItems() const;
+
+        void setOptItems(const std::vector<OptItem> &optItems);
+
+        [[nodiscard]] const std::vector<double> &getLb() const;
+
+        void setLb(const std::vector<double> &lb);
+
+        [[nodiscard]] const std::vector<double> &getUb() const;
+
+        void setUb(const std::vector<double> &ub);
+
+        [[nodiscard]] const std::vector<double> &getStartingValues() const;
+
+        void setStartingValues(const std::vector<double> &startingValues);
 
     private:
 
         std::vector<OptItem> optItems_;
+
+        std::vector<double> lb_;
+
+        std::vector<double> ub_;
+
+        std::vector<double> starting_values_;
 
     };
 }

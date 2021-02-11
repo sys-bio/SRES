@@ -15,7 +15,7 @@ namespace opt {
 
         OptItem() = default;
 
-        OptItem(double startingValue, double lb, double ub);
+        OptItem(double startingValue, double lb, double ub, bool logspace);
 
         [[nodiscard]] double getLb() const;
 
@@ -41,16 +41,54 @@ namespace opt {
 
         [[nodiscard]] bool checkUpperBound(const double &value) const;
 
-    private:
+        /**
+         * @brief scale a number between 0 and 1 to parameter value
+         */
+        [[nodiscard]] double scaleParameter(double trial) const;
 
+        /**
+         * @brief unscale a number from parameters to 0 and 1
+         */
+        [[nodiscard]] double unscaleParameter(double parameter) const;
+
+    private:
+        void computeScaleArg1();
+
+        void computeScaleArg2();
+
+
+        /**
+         * @brief lower boundary of parameter during optimization
+         */
         double lb_;
 
+        /**
+         * @brief upper boundary of parameter during optimization
+         */
         double ub_;
 
+        /**
+         * @brief current value of the optimization item in parameter space
+         */
         double value_;
 
+
+        /**
+         * @brief initial parameter value
+         */
         double startingValue_;
 
+        /**
+         * @brief scaled value of optimization item. Experimental
+         */
+        double scaleArg1_;
+
+        /**
+         * @brief scaled value of optimization item. Experimental
+         */
+        double scaleArg2_;
+
+        double scaledParameter_;
     };
 }
 

@@ -21,7 +21,7 @@ namespace opt {
 
     public:
 
-        static RandomNumberGenerator& getInstance();
+        static RandomNumberGenerator &getInstance();
 
         [[nodiscard]] unsigned long long int getSeed() const;
 
@@ -31,7 +31,7 @@ namespace opt {
 
         std::vector<double> uniformReal(double lb, double ub, int size);
 
-        [[nodiscard]] const std::default_random_engine &getGenerator() const;
+//        [[nodiscard]] std::default_random_engine* getGenerator() const;
 
         void setGenerator(const std::default_random_engine &generator);
 
@@ -39,13 +39,27 @@ namespace opt {
 
         std::vector<double> normal(double mu, double sigma, int size);
 
-        double uniformInt(int lb, int ub);
+        int uniformInt(int lb, int ub);
 
-        std::vector<double> uniformInt(int lb, int ub, int size);
+        std::vector<int> uniformInt(int lb, int ub, int size);
+
+        /**
+         * @brief produce a matrix of numbers sampled
+         * according to latin hypercode sampling with shape=(npopulation, nparams).
+         */
+        std::vector<std::vector<double>> lhs(int npopulation, int nparams);
+
+        /**
+         * @brief Alternative overload of lhs algorithm where the ranges provided
+         * by the lb and ub vector arguments are used. Sampling can be done in logspace.
+         */
+        std::vector<std::vector<double>> lhs(
+                int npopulation, int nparams, std::vector<double> lb, std::vector<double> ub, bool sampleInLogspace = true);
 
     private:
 
-        explicit RandomNumberGenerator(unsigned long long seed = std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        explicit RandomNumberGenerator(
+                unsigned long long seed = std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
         /**
          * @brief seed defaults to the current time

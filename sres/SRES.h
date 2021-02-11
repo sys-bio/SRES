@@ -14,7 +14,6 @@
 
 namespace opt {
 
-
     class SRES : public EvolutionaryOptimizer {
 
     public:
@@ -23,7 +22,11 @@ namespace opt {
 
         SRES(CostFunction cost, int populationSize, int numGenerations,
              const DoubleVector &startingValues, const DoubleVector &lb,
-             const DoubleVector &ub, int childrate = 7);
+             const DoubleVector &ub, int childrate,
+             int stopAfterStalledGenerations = 0, bool logspace = false,
+             bool verbose = false,
+             int numLHSInitSamples = 0,
+             int numGenerationsForLHSInitSamples = 5);
 
         [[nodiscard]] const DoubleVector &getMaxVariance() const;
 
@@ -35,10 +38,13 @@ namespace opt {
 
         bool fit() override;
 
-    private:
+
+        void printCurrent();
+
         bool swap(size_t from, size_t to);
 
         bool replicate();
+        bool replicate2();
 
         bool mutate() override;
 
@@ -48,10 +54,17 @@ namespace opt {
 
         bool creation(size_t first);
 
+        /**
+         * @brief locates the best individual of the current population
+         * @details in doing so the solutionValues_ containing the
+         * parameters belonging to the fittest individual are updated.
+         *
+         */
         size_t findBestIndividual() override;
 
         void select() override;
 
+    private:
         /**
          * @brief variance of every position in the
          * populationi matrix

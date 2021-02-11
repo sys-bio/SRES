@@ -35,6 +35,10 @@ namespace opt {
          * @param childRate Number of times to multiply populationSize by to get the number of children per generation
          * defaults to 7.
          * @param stopAfterStalledGenerations stop evolution after this many generations if fitness does not change.
+         * @param logspace perform the optimization in logspace
+         * @param verbose output logging information to console when a new best parameter set is found
+         * @param numLHSInitSamples use latin hypercube random sampling this many times for
+         * @param numGenerationsForLHSInitSamples generations each. Take the best of those runs for initial population.
          */
         EvolutionaryOptimizer(
                 CostFunction cost,
@@ -44,7 +48,11 @@ namespace opt {
                 const DoubleVector &lb,
                 const DoubleVector &ub,
                 int childRate = 7,
-                int stopAfterStalledGenerations = 25
+                int stopAfterStalledGenerations = 0,
+                bool logspace = false,
+                bool verbose = false,
+                int numLHSInitSamples = 0,
+                int numGenerationsForLHSInitSamples = 5
         );
 
         /**
@@ -53,6 +61,13 @@ namespace opt {
          * their parameters
          */
         bool fit() override = 0;
+
+        /**
+         * @brief produce random populations using latin hypercube sampling
+         *
+         */
+        virtual DoubleMatrix findStartingSet();
+
 
         /**
          * @brief getter for population size
@@ -207,6 +222,23 @@ namespace opt {
          * individuals in the child population.
          */
         int childRate_ = 7;
+
+        /**
+         * @brief the number of times to sample
+         * initial population using latin hypercube sampling (LHS)
+         * before feeding the best into the main algorithm. Default is 0,
+         * meaning only a single population is sampled before executing the
+         * main algorithm.
+         */
+        int numLHSInitSamples_ = 0;
+
+        /**
+         * @brief When sampling initial population using latin hypercube sampling
+         * this number is used for the number of generations to run per sample parameter set. The default
+         * is 0, meaning the parameter sets are samples only and are not optimized at all. It can be
+         * beneficial to set this to some low number
+         */
+        int numGenerationsForLHSInitSamples_ = 0;
 
     };
 

@@ -35,14 +35,14 @@ public:
 
 TEST_F(CCSRESTests, TestConstructible1) {
     ASSERT_NO_THROW(
-           SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+           SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7, 25, true, true);
             SRES_deleteSRES(sres);
     );
 }
 
 
 TEST_F(CCSRESTests, TestGetBestValue) {
-    SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+    SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7, 25, true, true);
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
     double best = SRES_getBestFitnessValue(sres);
@@ -55,7 +55,7 @@ TEST_F(CCSRESTests, TestGetSizeOfHOF) {
     // todo hof only gets updated when a generation finds a better individual than has been seed before.
     // Therefore, it would be better to also have an array storing the generation of when the individual
     // achieved their glory.
-    SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7);
+    SRES *sres = SRES_newSRES(cost, 10, 50, s, l, u, 2, 7, 25, true, true);
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
     ASSERT_EQ(12, SRES_getSizeOfHallOfFame(sres));
@@ -63,7 +63,7 @@ TEST_F(CCSRESTests, TestGetSizeOfHOF) {
 }
 
 TEST_F(CCSRESTests, TestHallOfFame) {
-    SRES *sres = SRES_newSRES(cost, 10, 100, s, l, u, 2,7);
+    SRES *sres = SRES_newSRES(cost, 10, 100, s, l, u, 2,7, 25, true, true);
     SRES_setSeed(sres, 4);
     SRES_fit(sres);
 
@@ -83,7 +83,7 @@ TEST_F(CCSRESTests, TestHallOfFame) {
 
 
 TEST_F(CCSRESTests, TestGetSolutionValues) {
-    SRES *sres = SRES_newSRES(cost, 20, 50, s, l, u, 2, 7);
+    SRES *sres = SRES_newSRES(cost, 20, 50, s, l, u, 2, 7, 25, true, true);
 
     SRES_setSeed(sres, 4);
     SRES_fit(sres);

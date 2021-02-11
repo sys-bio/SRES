@@ -134,9 +134,11 @@ def cost_fun(parameters):
     r.reset()
 
     # set the new parameter values
+    print('sheede')
     for i in range(len(parameters.contents)):
         param = r.freeParameters()[i]
-        val = round(parameters.contents[i], 6)
+        print(parameters.contents[i])
+        val = 10 ** parameters.contents[i]
         # print("param: val: ", param, ":", val, ",")
         setattr(r, param, val)
 
@@ -201,6 +203,9 @@ def do_estimation(ngen: int = 50, popsize: int = 50, starting_set=None):
         lb=[0.01] * len(r.freeParameters()),
         ub=[10] * len(r.freeParameters()),
         childrate=7,
+        logspace=True,
+        verbose=True,
+        stopAfterStalledGenerations=0
     )
 
     return sres.fit()
@@ -254,8 +259,8 @@ def repeated_estimation(ngen: int = 50, popsize: int = 50, n: int = 10):
               ", best objective function value: ", results["bestFitness"],
               ", estimated parameter values: ", results["bestSolution"]
               )
+        plot(best_results)
     plot_waterfall(results["hallOfFame"])
-    plot(best_results)
     print(best_results)
 
 
@@ -278,12 +283,12 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    NGEN = 25
-    POPSIZE = 15  # len(r.freeParameters()) * 10
+    NGEN = 200
+    POPSIZE = len(r.freeParameters()) * 10
     N = 20
 
-    DO_PARAMETER_ESTIMATION = False
-    DO_MULTIPLE_PARAMETER_ESTIMATIONS = True
+    DO_PARAMETER_ESTIMATION = True
+    DO_MULTIPLE_PARAMETER_ESTIMATIONS = False
 
     if DO_PARAMETER_ESTIMATION:
         starting_set = [7.02227063, 7.99316053, 4.80914422, 2.60842446, 0.03399503,
@@ -295,9 +300,9 @@ if __name__ == "__main__":
                         8.71267203, 5.7856511, 5.63214039, 6.07861862, 5.39103686,
                         5.13700395, 5.216952, 7.59655661, 1.53969082, 3.09525245,
                         6.82843622, 3.68719038, 3.81346061]
-        results = do_estimation(NGEN, POPSIZE, starting_set)
-
+        results = do_estimation(NGEN, POPSIZE)
         plot(results)
+        print(results)
 
     if DO_MULTIPLE_PARAMETER_ESTIMATIONS:
         repeated_estimation(NGEN, POPSIZE, N)

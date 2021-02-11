@@ -1,7 +1,6 @@
-#include "SRES.h"
 #include <cmath>
-#include <iostream>
-#include "random"
+#include "gtest/gtest.h"
+#include "SRES.h"
 
 #define LOGSPACE true
 
@@ -33,27 +32,88 @@ double cost(double *input_params) {
 }
 
 
-int main() {
+class SRESTests : public ::testing::Test {
 
+public:
+    SRESTests() = default;
+
+};
+
+TEST_F(SRESTests, TestFindStartingSet) {
     SRES sres(cost, 10, 5,
+              {8.324, 7.335},
+              {0.01, 0.01}, {100, 100}, 7, 25, LOGSPACE, true,
+              10, 3);
+
+    sres.findStartingSet();
+}
+
+
+TEST_F(SRESTests, TestFindBestIndividual) {
+    SRES sres(cost, 10, 5,
+              {8.324, 7.335},
+              {0.01, 0.01}, {100, 100}, 7, 25, LOGSPACE, true,
+              10, 3);
+    sres.setSeed(4);
+    sres.fit();
+//    DoubleMatrix pop = sres.getPopulation();
+
+//    size_t idx = sres.findBestIndividual();
+//
+//
+//    sres;
+}
+
+
+TEST_F(SRESTests, Fit) {
+    SRES sres(cost, 50, 50,
               {8.324, 7.335},
               {0.01, 0.01}, {100, 100}, 7, 25, LOGSPACE, true);
     sres.fit();
-
-    std::cout << "Solution best fit log space: " << sres.getBestFitnessValue() << "; best solution: ";
-    for (auto i: sres.getSolutionValues()) {
-        std::cout << i << "\t";
-    }
-    std::cout << std::endl;
-    std::cout << "Solution best fit lin space " << pow(10, sres.getBestFitnessValue()) << "; best solution: ";
-    for (auto i: sres.getSolutionValues()) {
-        std::cout << pow(10, i) << "\t";
-    }
-    std::cout << std::endl;
-
-//    std::cout << "hall of fame ";
-//    for (auto i: sres.getHallOfFame()) {
-//        std::cout << i << "\t";
-//    }
-//    std::cout << std::endl;
+    auto sol = sres.getSolutionValues();
+//    ASSERT_NEAR(3.0, sol[0], 0.01);
+//    ASSERT_NEAR(0.5, sol[1], 0.01);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

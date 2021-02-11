@@ -8,6 +8,8 @@ def beale(position):
     :return:
     """
     x, y = position
+    # x = 10**x
+    # y = 10**y
     return (1.5 - x + x * y) ** 2 + (2.25 - x + x * y ** 2) ** 2 + (2.625 - x + x * y ** 3) ** 2
 
 
@@ -19,14 +21,15 @@ def cost_fun(parameters):
 class SRESTests(unittest.TestCase):
 
     def setUp(self) -> None:
-        ngen = 25
-        popsize = 4
+        ngen = 250
+        popsize = 10
         self.sres = SRES(
             cost_fun, popsize=popsize, numGenerations=ngen,
             startingValues=[8.324, 7.335],
             lb=[0.1, 0.1],
             ub=[10, 10],
-            childrate=7
+            childrate=7, logspace=True
+
         )
         self.sres.setSeed(4)
 

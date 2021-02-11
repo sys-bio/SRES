@@ -19,7 +19,10 @@ namespace opt {
 
     SRES *SRES_newSRES(CostFunction cost, int populationSize, int numGenerations,
                        double *startingValues, const double *lb, double *ub,
-                       int numEstimatedParameters, int childrate = 7);
+                       int numEstimatedParameters, int childrate,
+                       int stopAfterStalledGenerations,
+                       bool logspace,
+                       bool verbose );
 
     int SRES_setSeed(SRES *sres, unsigned long long seed);
 
@@ -39,6 +42,8 @@ namespace opt {
     int SRES_getSizeOfSolution(SRES *sres);
 
     bool SRES_fit(SRES *sres);
+
+    bool SRES_fitLHS(SRES *sres);
 
     int SRES_getNumberOfEstimatedParameters(SRES *sres);
 
