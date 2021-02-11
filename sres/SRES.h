@@ -47,7 +47,7 @@ namespace opt {
 
         bool initialize() override;
 
-        bool SRES::initializeLHS();
+        bool initializeLHS();
 
 
         bool creation(size_t first);
